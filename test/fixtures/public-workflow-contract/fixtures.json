@@ -1,0 +1,85 @@
+{
+  "weather": {
+    "schemaVersion": 1,
+    "workflowId": "weather-advisor",
+    "workflowMode": "arkimux-portable",
+    "workflowContractVersion": "1",
+    "requiredCapabilities": [
+      "agent-slot-invocation@1",
+      "durable-sequential-steps@1",
+      "effect-read@1",
+      "typed-results@1"
+    ],
+    "executionRequirements": {
+      "schemaVersion": 1,
+      "run": {
+        "maxDurationSeconds": 540
+      },
+      "operations": {
+        "read-weather": {
+          "maxDurationSeconds": 10
+        },
+        "recommend-clothing": {
+          "maxDurationSeconds": 240
+        },
+        "critique-clothing": {
+          "maxDurationSeconds": 240
+        }
+      }
+    },
+    "sourceBindings": []
+  },
+  "vendor": {
+    "schemaVersion": 1,
+    "workflowId": "vendor-evaluation",
+    "workflowMode": "arkimux-portable",
+    "workflowContractVersion": "1",
+    "requiredCapabilities": [
+      "agent-slot-invocation@1",
+      "durable-sequential-steps@1",
+      "typed-results@1"
+    ],
+    "executionRequirements": {
+      "schemaVersion": 1,
+      "run": {
+        "maxDurationSeconds": 540
+      },
+      "operations": {
+        "evaluate-vendors": {
+          "maxDurationSeconds": 480
+        }
+      }
+    },
+    "sourceBindings": []
+  },
+  "native": {
+    "schemaVersion": 1,
+    "workflowId": "native-example",
+    "workflowMode": "native-runtime-bound",
+    "workflowContractVersion": "1",
+    "requiredCapabilities": [
+      "typed-results@1"
+    ],
+    "executionRequirements": {
+      "schemaVersion": 1,
+      "run": {
+        "maxDurationSeconds": 540
+      },
+      "operations": {
+        "evaluate-vendors": {
+          "maxDurationSeconds": 480
+        }
+      }
+    },
+    "sourceBindings": [
+      {
+        "kind": "framework",
+        "id": "example-framework",
+        "source": {
+          "file": "workflows/native-example/src/workflow.ts",
+          "import": "example-framework"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "executionProviders": {
+    "codex-cli": {
+      "command": "codex",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": [
+        "PATH",
+        "TMPDIR"
+      ]
+    },
+    "pi-cli": {
+      "command": "pi",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": [
+        "PATH",
+        "TMPDIR"
+      ],
+      "offline": true,
+      "telemetry": false,
+      "versionCheck": false
+    },
+    "claude-code-cli": {
+      "command": "claude",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": [
+        "PATH",
+        "TMPDIR"
+      ],
+      "requiredVersion": "2.1.241"
+    },
+    "kimi-code-cli": {
+      "command": "kimi",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": [
+        "PATH",
+        "TMPDIR"
+      ],
+      "telemetry": false,
+      "requiredVersion": "0.38.0"
+    }
+  },
+  "authProviders": {
+    "codex-native-session": {
+      "kind": "runtime-native",
+      "runtime": "codex-cli"
+    },
+    "pi-openai-codex-session": {
+      "kind": "runtime-native",
+      "runtime": "pi-cli",
+      "modelProvider": "openai-codex"
+    },
+    "claude-code-native-session": {
+      "kind": "runtime-native",
+      "runtime": "claude-code-cli",
+      "modelProvider": "anthropic"
+    },
+    "kimi-code-native-session": {
+      "kind": "runtime-native",
+      "runtime": "kimi-code-cli",
+      "modelProvider": "kimi"
+    },
+    "openai-api-key": {
+      "kind": "environment",
+      "sourceVariable": "OPENAI_API_KEY",
+      "targetVariable": "OPENAI_API_KEY"
+    },
+    "anthropic-api-key": {
+      "kind": "environment",
+      "sourceVariable": "ANTHROPIC_API_KEY",
+      "targetVariable": "ANTHROPIC_API_KEY"
+    },
+    "kimi-platform-api-key": {
+      "kind": "environment",
+      "sourceVariable": "MOONSHOT_API_KEY",
+      "targetVariable": "MOONSHOT_API_KEY"
+    },
+    "kimi-coding-api-key": {
+      "kind": "environment",
+      "sourceVariable": "KIMI_API_KEY",
+      "targetVariable": "KIMI_API_KEY"
+    },
+    "claude-anthropic-api-key": {
+      "kind": "environment",
+      "sourceVariable": "ANTHROPIC_API_KEY",
+      "targetVariable": "ANTHROPIC_API_KEY"
+    },
+    "kimi-code-platform-api-key": {
+      "kind": "environment",
+      "sourceVariable": "KIMI_MODEL_API_KEY",
+      "targetVariable": "KIMI_MODEL_API_KEY"
+    }
+  }
+}

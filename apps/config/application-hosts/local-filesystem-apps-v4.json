@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "configurationId": "local-filesystem-apps-v4",
+  "platformConfigurationId": "local-platform-v3",
+  "http": {
+    "allowedBrowserOrigins": [
+      "http://localhost:4173",
+      "http://localhost:5173",
+      "http://127.0.0.1:4173",
+      "http://127.0.0.1:5173"
+    ]
+  },
+  "authentication": {
+    "adapterId": "local-fixed-identity@1",
+    "options": {
+      "providerId": "local-cli",
+      "subjectIdEnvironmentVariable": "AGENT_EXECUTION_LOCAL_SUBJECT"
+    }
+  },
+  "runDispatch": {
+    "adapterId": "local-workflow-dispatch@1",
+    "options": {}
+  },
+  "queryStores": {
+    "runCatalog": {
+      "adapterId": "file-run-catalog@2",
+      "options": {
+        "outputRoots": [
+          ".arkimux/local/runs"
+        ]
+      }
+    },
+    "runArtifacts": { "adapterId": "file-run-artifacts-query@2", "options": {} },
+    "publishedResults": { "adapterId": "file-published-results-query@2", "options": {} },
+    "runPerformance": { "adapterId": "file-run-performance-query@2", "options": {} }
+  }
+}

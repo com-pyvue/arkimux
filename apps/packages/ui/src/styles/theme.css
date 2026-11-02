@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --graph-step: #475569;
+  --graph-choice: #7e22ce;
+  --graph-loop: #a21caf;
+  --graph-map: #0e7490;
+  --graph-reduce: #b45309;
+  --graph-subgraph: #4338ca;
+  --graph-selected: #92400e;
+  --graph-start: #1d4ed8;
+  --graph-continuation: #15803d;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --graph-step: #94a3b8;
+  --graph-choice: #d8b4fe;
+  --graph-loop: #f0abfc;
+  --graph-map: #67e8f9;
+  --graph-reduce: #fcd34d;
+  --graph-subgraph: #a5b4fc;
+  --graph-selected: #fbbf24;
+  --graph-start: #93c5fd;
+  --graph-continuation: #86efac;
+}
+
+.workflow-graph-node { --graph-node-color: var(--graph-step); cursor: pointer; outline: none; }
+.workflow-graph-node[data-kind="choice"] { --graph-node-color: var(--graph-choice); }
+.workflow-graph-node[data-kind="loop"] { --graph-node-color: var(--graph-loop); }
+.workflow-graph-node[data-kind="map"] { --graph-node-color: var(--graph-map); }
+.workflow-graph-node[data-kind="reduce"] { --graph-node-color: var(--graph-reduce); }
+.workflow-graph-node[data-kind="subgraph"] { --graph-node-color: var(--graph-subgraph); }
+.workflow-graph-node[data-state="Starting here"] { --graph-node-color: var(--graph-start); }
+.workflow-graph-node[data-state="Continuation"] { --graph-node-color: var(--graph-continuation); }
+.workflow-graph-node[data-state="Skipped"] { --graph-node-color: var(--graph-step); }
+.workflow-graph-node[aria-pressed="true"] { --graph-node-color: var(--graph-selected); }
+.workflow-graph-node-frame { fill: var(--card); stroke: var(--graph-node-color); stroke-width: 2; }
+.workflow-graph-node[data-state="Skipped"] .workflow-graph-node-frame { fill: var(--muted); stroke-dasharray: 5 4; }
+.workflow-graph-node[aria-pressed="true"] .workflow-graph-node-frame { stroke-width: 3; }
+.workflow-graph-node-halo { fill: none; stroke: var(--foreground); stroke-width: 2; opacity: 0; }
+.workflow-graph-node:hover .workflow-graph-node-halo,
+.workflow-graph-node:focus-visible .workflow-graph-node-halo { opacity: 1; }
+.workflow-graph-edge { color: var(--muted-foreground); outline: none; }
+.workflow-graph-edge:hover, .workflow-graph-edge:focus-visible { color: var(--foreground); }
+.workflow-graph-edge:hover > path, .workflow-graph-edge:focus-visible > path { stroke-width: 2.5; }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+}

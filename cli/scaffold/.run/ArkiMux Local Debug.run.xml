@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ArkiMux Local Debug" type="NodeJSConfigurationType" path-to-js-file="$PROJECT_DIR$/node_modules/@com-pyvue/arkimux/dist/cli.js" working-dir="$PROJECT_DIR$" application-parameters="local debug">
+    <method v="2" />
+  </configuration>
+</component>

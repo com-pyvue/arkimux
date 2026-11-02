@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "weather-advisor",
+  "workflowMode": "arkimux-portable",
+  "workflowContractVersion": "4",
+  "requiredCapabilities": ["agent-slot-invocation@1", "durable-sequential-steps@1", "effect-read@1", "typed-results@1"],
+  "executionRequirements": {
+    "schemaVersion": 1,
+    "run": { "maxDurationSeconds": 540 },
+    "operations": {
+      "read-weather": { "maxDurationSeconds": 10 },
+      "recommend-clothing": { "maxDurationSeconds": 240 },
+      "critique-clothing": { "maxDurationSeconds": 240 }
+    }
+  },
+  "sourceBindings": []
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@com-pyvue/agent-execution-local",
+  "version": "0.1.0-alpha.34",
+  "description": "Bundled local Agent Execution API and operations portal",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./testing/telemetry": {"types":"./src/localEventTelemetry.ts","development":"./src/localEventTelemetry.ts","import":"./dist/testing/telemetry.js"},
+    "./testing/telemetry-state": {"types":"./src/localTelemetryState.ts","development":"./src/localTelemetryState.ts","import":"./dist/testing/telemetry-state.js"},
+    "./testing/telemetry-transport": {"types":"./src/localTelemetryTransport.ts","development":"./src/localTelemetryTransport.ts","import":"./dist/testing/telemetry-transport.js"}
+  },
+  "bin": {
+    "agent-execution-local": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29",
+    "@com-pyvue/agent-execution-run-contract": "0.1.0-alpha.29",
+    "@com-pyvue/arkimux-telemetry-contracts": "0.1.0",
+    "zod": "^4.4.3"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "optionalDependencies": {
+    "@napi-rs/keyring": "2.1.0"
+  },
+  "license": "Apache-2.0"
+}

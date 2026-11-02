@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "LJ2-038",
+  "recordedAt": "2026-09-18T17:12:14Z",
+  "status": "technical-review-passed",
+  "humanAcceptance": false,
+  "candidate": {
+    "bootstrapEvidence": ".codex-temp/local-v2-bootstrap/2026-09-18T17-03-00-996Z",
+    "package": "@com-pyvue/arkimux@0.1.0-alpha.9",
+    "sha256": "69349318be815f71292f74a5b9a8e85ca14ef0e61e96ae20e939c3ef9f6a764f",
+    "integrity": "sha512-Bc2Yo8SLsg3AaWCkIDRR9G0SmoA9gXsZHx6lQqi5TMmbgfNAoUEGXW8FtvIGMBbKg/ng8FSmD+uwT4iaY1ccyg=="
+  },
+  "expectedResult": {
+    "schemaVersion": 1,
+    "input1": {
+      "schemaVersion": 1,
+      "value": 10,
+      "values": [1, 2, 3],
+      "mode": "double",
+      "loopUntil": 80
+    },
+    "output1": {
+      "original": 10,
+      "incremented": 11
+    },
+    "output2": {
+      "input1": {
+        "schemaVersion": 1,
+        "value": 10,
+        "values": [1, 2, 3],
+        "mode": "double",
+        "loopUntil": 80
+      },
+      "output1": {
+        "original": 10,
+        "incremented": 11
+      },
+      "base": 11,
+      "mode": "double"
+    },
+    "branch": {
+      "selected": "double",
+      "value": 22
+    },
+    "mapped": [23, 25, 27],
+    "reduced": 75,
+    "looped": 80
+  },
+  "runs": {
+    "supplied": {
+      "step1": "graph-invocation-1789750776139-2eb04626",
+      "step2": "graph-invocation-1789750774136-a751b839",
+      "mapItem1": "graph-invocation-1789750776275-feb53edc"
+    },
+    "deferred": {
+      "step1": "graph-invocation-1789750804616-ea2c24d1",
+      "step2": "graph-invocation-1789750803324-7a9f3c13",
+      "mapItem1": "graph-invocation-1789750804902-c5ffe63d"
+    }
+  },
+  "restart": {
+    "port": 18942,
+    "stopped": true,
+    "restarted": true,
+    "sameRunIdsAfterResume": true
+  },
+  "directStep2": {
+    "runId": "graph-invocation-1789750774136-a751b839",
+    "step1ShapedCompletionCount": 0
+  },
+  "checks": [
+    "repository TypeScript build passed",
+    "focused graph tests passed",
+    "retained-server runtime tests passed",
+    "fresh candidate build passed",
+    "fresh generated project validation passed with 7 of 7 tests",
+    "clean Local V2 bootstrap passed",
+    "all supplied and deferred entry runs returned the expected typed result",
+    "all deferred runs resumed after Local restart with their original Run IDs"
+  ],
+  "scope": "Working-tree technical evidence for the private generated fixture. This is not final human acceptance."
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "contractId": "input-wait@1",
+  "journeyContractRevision": 8,
+  "status": "accepted-for-implementation",
+  "acceptedOn": "2026-09-07",
+  "runtimeAcceptance": false,
+  "amendments": [
+    {
+      "acceptedOn": "2026-09-08",
+      "decision": "The owner approved expanding the existing Run status enum directly because there are no real consumers; no separate public projection version or compatibility layer is required.",
+      "previousReadmeSha256": "6cf821ae4d423ca045c4fa0b455746f3babc012c99d8afe06398c08843b87d3f"
+    }
+  ],
+  "files": {
+    "README.md": "97417180713cba543c2206e85c2f678a39d269a430fb8a1d14398e978da62f02",
+    "contracts.d.ts": "f5f202f473256de2557d1b6abec0829b88515d9b41ea5ff8738b69eaea85d8e3",
+    "tsconfig.json": "873f7190979b4ae01c30bbffd4be99d2db03866d7c530143eb971dbc38600fd4",
+    "type-fixture.ts": "a579ce3a08082df2b8492d8cf3a68b09c407abf6b3ee93b8493824e33629a9e9"
+  }
+}

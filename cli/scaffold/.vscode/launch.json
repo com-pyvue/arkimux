@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ArkiMux Local Debug",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/@com-pyvue/arkimux/dist/cli.js",
+      "args": ["local", "debug"],
+      "cwd": "${workspaceFolder}",
+      "autoAttachChildProcesses": true,
+      "sourceMaps": true,
+      "pauseForSourceMap": true,
+      "resolveSourceMapLocations": null,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

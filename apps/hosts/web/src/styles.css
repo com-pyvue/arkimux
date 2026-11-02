@@ -1,0 +1,14 @@
+@import "@com-pyvue/agent-execution-ui/theme.css";
+
+@source "../../../packages/**/*.tsx";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}

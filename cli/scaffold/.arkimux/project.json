@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "kind": "arkimux-project",
+  "projectName": "__PROJECT_NAME__",
+  "workflowRegistry": "src/arkimux.workflows.ts"
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "configurationId": "local-platform-v2",
+  "stores": {
+    "users": { "adapterId": "file-users@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "roles": { "adapterId": "file-roles@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "roleAssignments": { "adapterId": "file-role-assignments@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "runConfigurations": { "adapterId": "file-run-configurations@1", "options": { "root": ".arkimux/local/configuration/run-configurations", "relativeTo": "repository" } },
+    "organizations": { "adapterId": "file-organizations@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "environments": { "adapterId": "file-environments@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "workflowReleases": { "adapterId": "file-workflow-releases@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } },
+    "workflowDeployments": { "adapterId": "file-workflow-deployments@1", "options": { "root": ".arkimux/local/configuration/deployments", "relativeTo": "repository" } },
+    "deploymentHealth": { "adapterId": "file-deployment-health@1", "options": { "root": ".arkimux/local/configuration/deployments", "relativeTo": "repository" } },
+    "meterRecords": { "adapterId": "file-meter-records@1", "options": { "root": ".arkimux/local/configuration/deployments", "relativeTo": "repository" } },
+    "runProjections": { "adapterId": "file-run-projections@1", "options": { "root": ".arkimux/local/configuration", "relativeTo": "repository" } }
+  }
+}

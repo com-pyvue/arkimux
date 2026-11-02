@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "configurationId": "weather-advisor-codex-openai-v1",
+  "workflow": { "kind": "weather-advisor", "version": 1 },
+  "agents": {
+    "recommendation": { "timeoutMs": 240000, "execution": { "provider": "codex-cli", "authProvider": "codex-openai-native-session", "parameters": { "model": "gpt-5.6-luna", "model_reasoning_effort": "high" } } },
+    "critique": { "timeoutMs": 240000, "execution": { "provider": "codex-cli", "authProvider": "codex-openai-native-session", "parameters": { "model": "gpt-5.6-luna", "model_reasoning_effort": "high" } } }
+  }
+}

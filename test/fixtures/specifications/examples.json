@@ -1,0 +1,54 @@
+{
+  "status": "synthetic-review-fixtures-not-runtime-evidence",
+  "weatherInput": { "schemaVersion": 1, "city": "Istanbul" },
+  "weatherResult": {
+    "schemaVersion": 1,
+    "city": "Istanbul",
+    "weather": {
+      "summary": "Light rain",
+      "temperatureC": 16,
+      "feelsLikeC": 14,
+      "windKph": 18,
+      "precipitationMm": 0.8
+    },
+    "recommendation": {
+      "summary": "Wear light layers and carry rain protection.",
+      "clothing": [
+        { "item": "Light waterproof jacket", "reason": "The supplied snapshot reports light rain and wind." },
+        { "item": "Comfortable closed shoes", "reason": "They are suitable for damp ground." }
+      ],
+      "cautions": ["This is a single weather snapshot, not an official warning or forecast."]
+    },
+    "critique": {
+      "verdict": "reasonable",
+      "issues": [],
+      "adjustedAdvice": "Keep the layers removable and check current conditions before a long outdoor trip."
+    }
+  },
+  "vendorInput": {
+    "schemaVersion": 1,
+    "vendors": ["Atlas Cloud", "Beacon AI"],
+    "requirements": ["TypeScript SDK", "EU data residency", "monthly budget at most USD 500"]
+  },
+  "vendorResult": {
+    "schemaVersion": 1,
+    "recommendation": {
+      "status": "needs-evidence",
+      "vendor": null,
+      "rationale": "Names and requirements alone do not establish which vendor meets the requirements."
+    },
+    "alternatives": [
+      { "vendor": "Atlas Cloud", "rationale": "Verify SDK support, contractual EU data residency and cost at the intended usage." },
+      { "vendor": "Beacon AI", "rationale": "Request the same evidence before comparing this option with Atlas Cloud." }
+    ],
+    "risks": [
+      { "risk": "An unverified residency claim may not cover all stored data.", "mitigation": "Obtain the applicable data-processing and residency terms." },
+      { "risk": "A listed price may omit usage-dependent charges.", "mitigation": "Price the same expected monthly workload for both vendors." }
+    ],
+    "nextSteps": [
+      "Verify a maintained TypeScript SDK for each vendor.",
+      "Confirm the EU residency scope and terms.",
+      "Compare total monthly cost for one shared usage estimate against USD 500."
+    ]
+  }
+}

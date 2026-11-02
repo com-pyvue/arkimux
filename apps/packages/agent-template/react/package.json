@@ -1,0 +1,18 @@
+{
+  "name": "@com-pyvue/agent-execution-agent-template-react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./internal/*": "./src/*"
+  },
+  "dependencies": {
+    "@com-pyvue/agent-execution-agent-template-contract": "*",
+    "@com-pyvue/agent-execution-ui": "*",
+    "@tanstack/react-query": "^5.101.4",
+    "react": "^19.2.8",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "license": "Apache-2.0"
+}

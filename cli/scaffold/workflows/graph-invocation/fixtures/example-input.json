@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "value": 10,
+  "values": [1, 2, 3],
+  "mode": "double",
+  "loopUntil": 80
+}

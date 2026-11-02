@@ -1,0 +1,7 @@
+[
+  "--permission",
+  "--allow-inspector",
+  "--allow-fs-read=/opt/arkimux",
+  "--allow-fs-read=/work/scratch",
+  "--allow-fs-write=/work/scratch"
+]

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "vendor-evaluation",
+  "workflowMode": "arkimux-portable",
+  "workflowContractVersion": "1",
+  "requiredCapabilities": [],
+  "executionRequirements": {
+    "schemaVersion": 1,
+    "run": { "maxDurationSeconds": 540 },
+    "operations": {
+      "evaluate-vendors": { "maxDurationSeconds": 480 }
+    }
+  },
+  "sourceBindings": []
+}

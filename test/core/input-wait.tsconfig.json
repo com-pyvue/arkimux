@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["input-wait-public-types.ts", "input-wait.test.ts"]
+}

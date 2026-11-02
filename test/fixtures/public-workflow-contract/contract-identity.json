@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "contractId": "public-workflow-declarations@1",
+  "journeyContractRevision": 10,
+  "status": "accepted-for-implementation",
+  "acceptedOn": "2026-09-20",
+  "runtimeAcceptance": false,
+  "files": {
+    "README.md": "06a5c9a292a8b6ff40c948a48d2d50ff0d6fb76d1c04ecb13c4d0799b1c6239e",
+    "contracts.ts": "0a26faf6c620fb32f6a47b8b6d5d097deea755cb690ab82902aea601dc5a4af5",
+    "fixtures.json": "5b78f6a8f9131147e1069858c69c9df27bcdfca8e4585833652abbfba90f5221",
+    "contract.test.ts": "375f2ef7c64bf7f99d019eed5e6eddda2fd4423b059099998ef036eaa1980c0e"
+  }
+}

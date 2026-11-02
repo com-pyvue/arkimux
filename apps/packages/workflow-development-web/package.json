@@ -1,0 +1,32 @@
+{
+  "name": "@com-pyvue/agent-execution-workflow-development-web",
+  "version": "0.1.0-alpha.29",
+  "description": "Build-time workflow development portal composition with workflow-owned result renderers.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./internal/*": "./src/*"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@com-pyvue/agent-execution-web-host": "0.0.0",
+    "@com-pyvue/agent-execution-result-presentation": "0.1.0-alpha.29",
+    "@com-pyvue/agent-execution-run-contract": "0.1.0-alpha.29",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@com-pyvue/agent-execution-result-presentation",
+  "version": "0.1.0-alpha.29",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./internal/*": "./src/*"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@com-pyvue/agent-execution-run-contract": "0.1.0-alpha.29",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "license": "Apache-2.0"
+}

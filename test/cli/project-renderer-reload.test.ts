@@ -1,0 +1,162 @@
+import { cp, mkdtemp, readFile, writeFile, rm, symlink } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, expect, it, vi } from "vitest";
+import { Hono } from "hono";
+import { createProjectResultViewSource } from "../../cli/src/projectRendererReload.ts";
+import { mountLocalResultViews, type LocalResultViewSource } from "../../local/src/resultViews.ts";
+
+const roots: string[] = [];
+const sources: LocalResultViewSource[] = [];
+afterEach(async () => {
+  for (const source of sources.splice(0)) await source.close();
+  for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true });
+});
+const disabledRegistry = `import { renderToStaticMarkup } from "react-dom/server";
+import type { LocalResultView } from "@com-pyvue/agent-execution-local";
+import { WeatherAdvisorResult } from "../workflows/weather-advisor/src/result-renderer.js";
+export const rendererDeclarations = [/* registration commented out */];
+export const resultViews: readonly LocalResultView[] = [/* view commented out */];
+throw new Error("A disabled registry must never execute");
+`;
+async function fixture(broken = false, disabled = false) {
+  const root = await mkdtemp(path.join(os.tmpdir(), "renderer-reload-")); roots.push(root);
+  await cp(new URL("../../cli/scaffold/src/", import.meta.url), path.join(root, "src"), { recursive: true });
+  await cp(new URL("../../cli/scaffold/workflows/", import.meta.url), path.join(root, "workflows"), { recursive: true });
+  // Fixture-only dependency resolution. Generated-project packaging is checked separately.
+  await symlink(new URL("../../node_modules", import.meta.url).pathname, path.join(root, "node_modules"));
+  const file = (name: string) => path.join(root, "workflows/weather-advisor/src", name);
+  await writeFile(file("label.ts"), 'export const label = "first";');
+  await writeFile(file("view.css"), 'h1 { color: red; }');
+  const renderer = `import { label } from './label.js'; import './view.css';\nexport function WeatherAdvisorResult() { return <h1>{label}</h1>; }`;
+  await writeFile(file("result-renderer.tsx"), broken ? "export const broken = ;" : renderer);
+  // Vite must not execute project configuration or read .env while rendering.
+  await writeFile(path.join(root, "vite.config.ts"), 'throw new Error("must not load config");');
+  await writeFile(path.join(root, ".env"), "VITE_PRIVATE_TEST=must-not-load");
+  if (disabled) await writeFile(path.join(root, "src/arkimux.renderers.tsx"), disabledRegistry);
+  const source = await createProjectResultViewSource(root); sources.push(source);
+  const app = new Hono();
+  const result = { resultKind: "weather-advisor.result", payload: { schemaVersion: 2, original: "retained" } };
+  app.get("/api/v1/runs/:run/results/:result", c => c.req.header("authorization") === "Bearer fixture"
+    ? c.json(result) : c.json({ error: "unauthorized" }, 401));
+  mountLocalResultViews(app, [], source);
+  const view = () => app.request("/arkimux/result-views/run/result", { headers: { authorization: "Bearer fixture" } });
+  return { root, file, renderer, source, app, result, view };
+}
+async function changed(source: LocalResultViewSource, previous: number) {
+  await vi.waitFor(() => expect(source.snapshot().revision).toBeGreaterThan(previous), { timeout: 5000, interval: 40 });
+}
+it("starts with neutral JSON when both registrations are empty, without loading unused imports", async () => {
+  const f = await fixture(true, true);
+  expect(f.source.snapshot()).toMatchObject({ status: "unavailable", views: [] });
+  expect((await f.view()).status).toBe(404);
+  const metadata = await f.app.request("/arkimux/result-renderers");
+  expect(metadata.headers.get("x-arkimux-renderer-status")).toBe("unavailable");
+  expect(await metadata.json()).toEqual([]);
+});
+it("disables and re-enables registrations without treating leftover CSS imports as errors", async () => {
+  const f = await fixture();
+  const registry = path.join(f.root, "src/arkimux.renderers.tsx");
+  const original = await readFile(registry, "utf8");
+  let revision = f.source.snapshot().revision;
+  await writeFile(registry, disabledRegistry);
+  await changed(f.source, revision);
+  expect(f.source.snapshot()).toMatchObject({ status: "unavailable", views: [] });
+  expect((await f.view()).status).toBe(404);
+  expect((await f.app.request("/arkimux/result-views/run/result")).status).toBe(401);
+  expect(await (await f.app.request("/api/v1/runs/run/results/result", { headers: { authorization: "Bearer fixture" } })).json()).toEqual(f.result);
+  revision = f.source.snapshot().revision;
+  await writeFile(registry, original);
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("ready");
+  expect(await (await f.view()).text()).toContain("first");
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("result-renderer.tsx"), "export const broken = ;");
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("error");
+  expect((await f.view()).status).toBe(422);
+});
+it("hot-updates imports, CSS and registry at the same API while preserving authorization and JSON", async () => {
+  const f = await fixture();
+  expect(f.source.snapshot().status).toBe("ready");
+  const first = await (await f.view()).text();
+  expect(first).toContain("first"); expect(first).toContain("red");
+  let revision = f.source.snapshot().revision;
+  await writeFile(f.file("label.ts"), 'export const label = "second";');
+  await changed(f.source, revision);
+  expect(await (await f.view()).text()).toContain("second");
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("view.css"), "h1 { color: blue; }");
+  await changed(f.source, revision);
+  expect(await (await f.view()).text()).toContain("blue");
+  expect((await f.app.request("/arkimux/result-views/run/result")).status).toBe(401);
+  revision = f.source.snapshot().revision;
+  const registry = path.join(f.root, "src/arkimux.renderers.tsx");
+  const old = await readFile(registry, "utf8");
+  await writeFile(registry, old.replace('renderToStaticMarkup(<WeatherAdvisorResult payload={payload} />)', '`<p>registry update</p>${renderToStaticMarkup(<WeatherAdvisorResult payload={payload} />)}`'));
+  await changed(f.source, revision);
+  expect(await (await f.view()).text()).toContain("registry update");
+  const metadata = await f.app.request("/arkimux/result-renderers");
+  expect(metadata.headers.get("x-arkimux-renderer-revision")).toBe(String(f.source.snapshot().revision));
+  expect(metadata.headers.get("cache-control")).toBe("no-store");
+  expect(await (await f.app.request("/api/v1/runs/run/results/result", { headers: { authorization: "Bearer fixture" } })).json()).toEqual(f.result);
+});
+it("disables invalid views and automatically recovers from a repaired save, including broken startup", async () => {
+  const f = await fixture(true);
+  expect(f.source.snapshot().status).toBe("error");
+  expect((await f.app.request("/arkimux/result-renderers")).headers.get("x-arkimux-renderer-status")).toBe("error");
+  expect((await f.view()).status).toBe(422);
+  expect((await f.app.request("/arkimux/result-views/run/result")).status).toBe(401);
+  let revision = f.source.snapshot().revision;
+  await writeFile(f.file("result-renderer.tsx"), f.renderer);
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("ready");
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("label.ts"), "export const label = ;");
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("error");
+  expect((await f.view()).status).toBe(422);
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("label.ts"), 'export const label = "repaired";');
+  await changed(f.source, revision);
+  expect(await (await f.view()).text()).toContain("repaired");
+  revision = f.source.snapshot().revision;
+  await rm(path.join(f.root, "src/arkimux.renderers.tsx"));
+  await changed(f.source, revision);
+  expect(f.source.snapshot().views).toEqual([]);
+  expect(f.source.snapshot().status).toBe("unavailable");
+  expect((await f.view()).status).toBe(404);
+  await f.source.close(); await f.source.close();
+  expect(process.env.VITE_PRIVATE_TEST).toBeUndefined();
+});
+
+it("renders CSS modules, reloads nested styles, and recovers from an out-of-scope import", async () => {
+  const f = await fixture();
+  let revision = f.source.snapshot().revision;
+  await writeFile(f.file("nested.css"), 'h1 { border-color: red; }');
+  await writeFile(f.file("view.module.css"), '@import "./nested.css"; .heading { color: blue; }');
+  await writeFile(f.file("result-renderer.tsx"), `import styles from './view.module.css'; export function WeatherAdvisorResult() { return <h1 className={styles.heading}>CSS module</h1>; }`);
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("ready");
+  const html = await (await f.view()).text();
+  const className = /class="([^"]+)"/.exec(html)?.[1];
+  expect(className).toBeTruthy(); expect(html).toContain(`.${className}`);
+  expect(html).toContain("border-color: red");
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("nested.css"), 'h1 { border-color: green; }');
+  await changed(f.source, revision);
+  expect(await (await f.view()).text()).toContain("border-color: green");
+  revision = f.source.snapshot().revision;
+  await writeFile(path.join(f.root, "private.css"), '.private-sentinel { color: lime; }');
+  await writeFile(f.file("nested.css"), '@import "../../../private.css";');
+  await changed(f.source, revision);
+  expect(f.source.snapshot().status).toBe("error");
+  expect((await f.view()).status).toBe(422);
+  expect(await (await f.app.request("/api/v1/runs/run/results/result", { headers: { authorization: "Bearer fixture" } })).json()).toEqual(f.result);
+  revision = f.source.snapshot().revision;
+  await writeFile(f.file("nested.css"), 'h1 { border-color: purple; }');
+  await changed(f.source, revision);
+  const repaired = await (await f.view()).text();
+  expect(repaired).toContain("border-color: purple");
+  expect(repaired).not.toContain("private-sentinel");
+});

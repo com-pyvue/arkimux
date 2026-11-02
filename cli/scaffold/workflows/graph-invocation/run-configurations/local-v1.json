@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "configurationId": "graph-invocation-local-v1",
+  "workflow": { "kind": "graph-invocation", "version": 1 },
+  "agents": {}
+}

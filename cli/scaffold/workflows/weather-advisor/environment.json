@@ -1,0 +1,4 @@
+{
+  "schemaVersion": 1,
+  "variables": [{ "name": "WEATHER_API_URL", "required": true, "secret": false, "type": "url" }]
+}

@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["durable-input-workflow.test.ts", "../../local/src/localRetainedWorkflowRunner.ts", "../../local/src/retainedAttemptWorker.ts"]
+}

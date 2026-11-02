@@ -1,0 +1,39 @@
+{
+  "name": "@com-pyvue/arkimux",
+  "version": "0.1.0-alpha.9",
+  "description": "CLI-first local ArkiMux workflow development candidate",
+  "type": "module",
+  "dependencies": {
+    "postcss": "8.5.25",
+    "typescript-parser": "npm:typescript@5.9.3",
+    "vite": "7.3.6"
+  },
+  "bin": {
+    "arkimux": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./create": {
+      "import": "./dist/create.js"
+    },
+    "./internal/*": "./src/*"
+  },
+  "files": [
+    "dist",
+    "npm-shrinkwrap.json",
+    "packages",
+    "scaffold",
+    "README.md",
+    "src"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "license": "Apache-2.0"
+}

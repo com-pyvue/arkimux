@@ -1,0 +1,6 @@
+node_modules/
+.env
+.arkimux/local/
+.agent-execution/
+.arkimux-create-failed.json
+*.log

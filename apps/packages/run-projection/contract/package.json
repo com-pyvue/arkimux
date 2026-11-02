@@ -1,0 +1,14 @@
+{
+  "name": "@com-pyvue/agent-execution-run-projection-contract",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./internal/*": "./src/*"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "version": "0.1.0-alpha.29",
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@com-pyvue/agent-execution-agent-template-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./internal/*": "./src/*"
+  },
+  "dependencies": {
+    "zod": "^4.4.3",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "license": "Apache-2.0"
+}

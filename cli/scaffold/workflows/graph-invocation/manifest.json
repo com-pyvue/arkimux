@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "graph-invocation",
+  "workflowMode": "arkimux-portable",
+  "workflowContractVersion": "1",
+  "requiredCapabilities": ["durable-sequential-steps@1", "typed-results@1"],
+  "executionRequirements": {
+    "schemaVersion": 1,
+    "run": { "maxDurationSeconds": 60 },
+    "operations": {}
+  },
+  "sourceBindings": []
+}

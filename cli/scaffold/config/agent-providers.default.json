@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "executionProviders": {
+    "codex-cli": {
+      "command": "codex",
+      "requiredVersion": "0.145.0",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": ["PATH", "TMPDIR"]
+    },
+    "pi-cli": {
+      "command": "pi",
+      "requiredVersion": "0.84.3",
+      "offline": true,
+      "telemetry": false,
+      "versionCheck": false,
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": ["PATH", "TMPDIR"]
+    },
+    "claude-code-cli": {
+      "command": "claude",
+      "requiredVersion": "2.1.241",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": ["PATH", "TMPDIR"]
+    },
+    "kimi-code-cli": {
+      "command": "kimi",
+      "heartbeatIntervalMs": 15000,
+      "environmentAllowlist": ["PATH", "TMPDIR"]
+    }
+  },
+  "authProviders": {
+    "codex-openai-native-session": {
+      "kind": "runtime-native",
+      "runtime": "codex-cli",
+      "modelProvider": "openai"
+    },
+    "codex-native-session": {
+      "kind": "runtime-native",
+      "runtime": "codex-cli"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "journeyId": "local-journey@2",
+  "contractRevision": 7,
+  "approvedOn": "2026-09-06",
+  "amends": "vendor-evaluation.md comparison configuration table only",
+  "preserves": "All accepted workflow IDs, source behavior, inputs, result schemas, models, timeouts and configuration IDs from the revision-6 workflow specifications.",
+  "cases": [
+    { "caseId": "baseline-aa", "configurationId": "vendor-evaluation-codex-openai-v1", "combinationId": "codex-openai-native-session", "authenticationKind": "runtime-native", "model": "gpt-5.6-luna" },
+    { "caseId": "runtime-ba", "configurationId": "vendor-evaluation-pi-openai-v1", "combinationId": "pi-openai-codex-native-session", "authenticationKind": "runtime-native", "model": "gpt-5.6-luna" },
+    { "caseId": "model-bb", "configurationId": "vendor-evaluation-pi-claude-v1", "combinationId": "pi-anthropic-api-key", "authenticationKind": "stored-credential", "model": "claude-sonnet-4-6" }
+  ],
+  "requiredProof": [
+    "The selected Anthropic API key is referenced through a separate Credential and is never returned or retained in evidence.",
+    "Pi API-key execution does not read or fall back to a Pi or Claude native session.",
+    "The second comparison transition explicitly changes both model/provider and authentication kind; no model-only causal claim is made."
+  ],
+  "liveProofAccepted": false,
+  "publicationAuthorized": false
+}

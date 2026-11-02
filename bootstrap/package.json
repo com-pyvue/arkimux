@@ -1,0 +1,27 @@
+{
+  "name": "create-arkimux",
+  "version": "0.1.0-alpha.2",
+  "description": "Create an ArkiMux project using one exact tested generator version",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "create-arkimux": "./src/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@com-pyvue/arkimux": "0.1.0-alpha.9"
+  }
+}

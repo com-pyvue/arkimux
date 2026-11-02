@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "decision": "Which runtime should own the first production deployment of this agent workflow?",
+  "constraints": [
+    "The workflow contract and published result must remain unchanged when the runtime changes.",
+    "The team needs a local development path and a customer-owned AWS deployment path.",
+    "The first production release should minimize operational uncertainty."
+  ],
+  "evidence": [
+    "The workflow can run through a provider-independent agent slot.",
+    "Run lifecycle and published results use versioned contracts.",
+    "The local API exposes the run and its typed result to independent clients."
+  ]
+}

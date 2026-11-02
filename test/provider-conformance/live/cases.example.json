@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "mode": "live",
+  "conformanceSetId": "local-codex-smoke",
+  "arkimuxRevision": "working-tree",
+  "evidenceDirectory": "./evidence",
+  "requiredCaseIds": [
+    "codex-openai-api-key"
+  ],
+  "cases": [
+    {
+      "caseId": "codex-openai-api-key",
+      "required": true,
+      "executionProviderId": "codex-cli",
+      "modelProvider": "openai",
+      "model": "gpt-5.6-luna",
+      "runtime": {
+        "command": "/absolute/path/to/codex",
+        "requiredVersion": "0.145.0"
+      },
+      "auth": {
+        "kind": "environment",
+        "authProviderId": "codex-openai-api-key",
+        "sourceVariable": "ARKIMUX_TEST_OPENAI_API_KEY",
+        "targetVariable": "OPENAI_API_KEY"
+      },
+      "parameters": {
+        "model": "gpt-5.6-luna",
+        "model_reasoning_effort": "low"
+      },
+      "timeoutMs": 30000,
+      "maxReportedCostUsd": 0.05,
+      "maxNativeToolCalls": 0,
+      "requiredUsageFields": [
+        "inputTokens",
+        "cachedInputTokens",
+        "outputTokens"
+      ]
+    }
+  ]
+}

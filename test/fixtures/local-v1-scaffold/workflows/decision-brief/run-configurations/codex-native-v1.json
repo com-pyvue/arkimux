@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "configurationId": "decision-brief-codex-native-v1",
+  "workflow": { "kind": "decision-brief", "version": 1 },
+  "agents": {
+    "decision-author": {
+      "timeoutMs": 600000,
+      "execution": {
+        "provider": "codex-cli",
+        "authProvider": "codex-native-session",
+        "parameters": {
+          "model": "gpt-5.6-luna",
+          "model_reasoning_effort": "high"
+        }
+      }
+    }
+  }
+}

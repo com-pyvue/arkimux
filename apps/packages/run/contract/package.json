@@ -1,0 +1,25 @@
+{
+  "name": "@com-pyvue/agent-execution-run-contract",
+  "version": "0.1.0-alpha.29",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./internal/*": "./src/*"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "zod": "^4.4.3",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "license": "Apache-2.0"
+}

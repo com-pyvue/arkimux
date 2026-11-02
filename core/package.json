@@ -1,0 +1,27 @@
+{
+  "name": "@com-pyvue/agent-execution-core",
+  "version": "0.1.0-alpha.29",
+  "description": "Workflow-neutral agent execution, lifecycle, provider, and store contracts.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./internal/*": "./src/*",
+    "./config/*": "./config/*"
+  },
+  "files": [
+    "config",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "license": "Apache-2.0"
+}

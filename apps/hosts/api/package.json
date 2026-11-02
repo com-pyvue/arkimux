@@ -1,0 +1,24 @@
+{
+  "name": "@com-pyvue/agent-execution-api-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./internal/*": "./src/*"
+  },
+  "dependencies": {
+    "@com-pyvue/agent-execution-agent-template-api": "*",
+    "@com-pyvue/agent-execution-agent-authentication-api": "*",
+    "@hono/node-server": "^2.1.0",
+    "@com-pyvue/agent-execution-application-host": "*",
+    "@com-pyvue/agent-execution-ui-profile-contract": "*",
+    "@com-pyvue/agent-execution-run-api": "*",
+    "@com-pyvue/agent-execution-role-api": "*",
+    "@com-pyvue/agent-execution-run-configuration-api": "*",
+    "@com-pyvue/agent-execution-user-api": "*",
+    "hono": "^4.13.0",
+    "@com-pyvue/agent-execution-core": "0.1.0-alpha.29"
+  },
+  "license": "Apache-2.0"
+}

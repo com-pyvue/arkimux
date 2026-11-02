@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["retained-execution.test.ts", "../cli/retained-workflow-build.test.ts", "../../cli/src/retainedWorkflowBuild.ts"]
+}

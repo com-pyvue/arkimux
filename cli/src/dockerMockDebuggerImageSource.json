@@ -1,0 +1,4 @@
+{
+  "kind": "registry",
+  "imageReference": "public.ecr.aws/q0q4q1u4/arkimux/mock-debugger@sha256:a3281d39eb47cf3c673535ce3c211ee21987f4abeb4051c01af5cb671483b6be"
+}

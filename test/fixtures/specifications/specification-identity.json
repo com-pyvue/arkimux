@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "specificationId": "local-v2-workflows@1",
+  "journeyId": "local-journey@2",
+  "workItemId": "LJ2-002",
+  "acceptedOn": "2026-09-04",
+  "files": {
+    "README.md": "9485acbe3b18b3e877884a8d92db2c27c1bcb15d47063439859a6bca712a1189",
+    "weather-advisor.md": "368bd8b1034e9f22b387639ba02959698d601e85d30bb723fc68dd9b8f35824d",
+    "vendor-evaluation.md": "6e302bcdf94065a71519b0a918dda3dfc17e06df7552485131e2a9a13c2a704f",
+    "draft-contracts.mjs": "743f5d94e720da6dfc5230f924c91536e14bfeeedbcfde0bfa46519e0788b0e6",
+    "draft-contracts.test.mjs": "2090ac5d7aa288e4398e3509e05bf2db9dde84dcc448870b6d8d952dcb85eb7d",
+    "examples.json": "5f10581590ff0145d8560488f8fb7a2c8a6bc5b260e29393901ecb8ebe81f557",
+    "weather-advisor.manifest.json": "a40e582cfa7cafb09e8ead2bc9e3ab747e9611b76c7d46ea7aec981d1079098f",
+    "vendor-evaluation.manifest.json": "36a133b8bd8911d014f69b7ab2aa2e67a25fb865bacf84d5fb424d7a32b22700"
+  }
+}

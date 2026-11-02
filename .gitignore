@@ -1,0 +1,12 @@
+node_modules/
+dist/
+**/dist/
+cli/packages/
+.env
+.env.*
+!.env.example
+.arkimux/local/
+.codex-temp/
+.agent-execution-platform/
+.idea/
+.DS_Store

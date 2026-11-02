@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["retained-host.test.ts", "diagnostic-execution-clock.test.ts", "../../local/src/localRetainedExecutionHost.ts"]
+}

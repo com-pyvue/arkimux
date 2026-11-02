@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["graph-workflow.test.ts", "graph-invocation.test.ts", "graph-invocation-records.test.ts", "graph-failure-policy.test.ts", "graph-workflow-public-types.ts", "../../core/src/**/*.ts", "../fixtures/input-wait-contract/graph-declaration.example.ts"]
+}

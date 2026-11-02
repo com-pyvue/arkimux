@@ -1,0 +1,44 @@
+{
+  "name": "__PROJECT_NAME__",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.3",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "arkimux local start",
+    "dev:debug": "arkimux local debug",
+    "dev:stop": "arkimux local stop",
+    "start": "arkimux local start",
+    "stop": "arkimux local stop",
+    "weather:run": "node --import tsx scripts/run-weather.ts",
+    "weather:result": "node --import tsx scripts/read-weather-result.ts",
+    "graph:run": "node --import tsx scripts/run-graph.ts",
+    "graph:answer": "node --import tsx scripts/answer-graph.ts",
+    "graph:result": "node --import tsx scripts/read-graph-result.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "validate": "npm run typecheck && arkimux project validate && npm test"
+  },
+  "dependencies": {
+    "@com-pyvue/agent-execution-core": "file:vendor/__CORE_TARBALL__",
+    "@com-pyvue/agent-execution-local": "file:vendor/__LOCAL_TARBALL__",
+    "@com-pyvue/agent-execution-run-contract": "file:vendor/__RUN_CONTRACT_TARBALL__",
+    "zod": "4.4.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@com-pyvue/arkimux": "__CLI_VERSION__",
+    "@openai/codex": "0.145.0",
+    "@anthropic-ai/claude-code": "2.1.241",
+    "@earendil-works/pi-coding-agent": "0.84.3",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tsx": "4.23.12",
+    "typescript": "5.9.3"
+  }
+}
