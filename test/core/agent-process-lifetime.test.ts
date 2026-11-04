@@ -1,14 +1,15 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { ChildProcess, spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { PassThrough } from "node:stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AgentAuthProviderRegistry, AgentExecutionRequest } from "../../core/src/application/agentProvider.ts";
 import { CodexCliAgentRunner } from "../../core/src/infrastructure/agents/codexCliAgentRunner.ts";
 import { PiCliAgentRunner } from "../../core/src/infrastructure/agents/piCliAgentRunner.ts";
 import { ClaudeCodeCliAgentRunner } from "../../core/src/infrastructure/agents/claudeCodeCliAgentRunner.ts";
 import { KimiCodeCliAgentRunner } from "../../core/src/infrastructure/agents/kimiCodeCliAgentRunner.ts";
-import { disposeAgentResources } from "../../core/src/infrastructure/agents/agentProcessLifetime.ts";
+import { agentProcessLifetime, disposeAgentResources } from "../../core/src/infrastructure/agents/agentProcessLifetime.ts";
 import { runStreamingCli } from "../../core/src/infrastructure/agents/nativeStreamingCliProcess.ts";
 import { probeCliExecutable } from "../../core/src/infrastructure/agents/cliExecutableResolver.ts";
 
@@ -29,6 +30,60 @@ async function fixture(body: string) {
 const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 const runningBody = `process.on('SIGTERM',()=>{});process.stdin.resume();writeFileSync('pid',String(process.pid));setInterval(()=>{},1000);`;
 const runners = [CodexCliAgentRunner, PiCliAgentRunner, ClaudeCodeCliAgentRunner, KimiCodeCliAgentRunner];
+
+describe("agent stdin failures", () => {
+  async function lifetimeFixture(invalidHeartbeatPath = false) {
+    const f = await fixture("");
+    const child = new ChildProcess();
+    child.stdin = new PassThrough();
+    const lifetime = agentProcessLifetime({ child, signal: f.controller.signal, timeoutMs: 10_000,
+      heartbeatIntervalMs: 5, heartbeatPath: invalidHeartbeatPath ? f.root : path.join(f.root, "heartbeat.json"),
+      heartbeat: status => ({ status }), streams: [] });
+    return { ...f, child, lifetime };
+  }
+
+  it("lets an early EPIPE finish without killing the CLI or masking its failed exit", async () => {
+    const f = await lifetimeFixture();
+    const kill = vi.spyOn(process, "kill").mockReturnValue(true);
+    Object.defineProperty(f.child, "pid", { value: 123456789 });
+    try {
+      f.child.stdin!.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
+      expect(kill).not.toHaveBeenCalled();
+      await expect(f.lifetime.finish(1)).resolves.toBeUndefined();
+      expect(JSON.parse(await fs.readFile(path.join(f.root, "heartbeat.json"), "utf8")).status).toBe("failed");
+    } finally { kill.mockRestore(); await f.lifetime.finish(1); }
+  });
+
+  it("does not accept a successful exit after the prompt write failed", async () => {
+    const f = await lifetimeFixture();
+    const cause = Object.assign(new Error("write EPIPE"), { code: "EPIPE" });
+    f.child.stdin!.emit("error", cause);
+    await expect(f.lifetime.finish(0)).rejects.toMatchObject({ cause });
+    expect(JSON.parse(await fs.readFile(path.join(f.root, "heartbeat.json"), "utf8")).status).toBe("failed");
+  });
+
+  it("does not suppress other stdin failures on a failed exit", async () => {
+    const f = await lifetimeFixture();
+    const cause = Object.assign(new Error("write EIO"), { code: "EIO" });
+    f.child.stdin!.emit("error", cause);
+    await expect(f.lifetime.finish(1)).rejects.toMatchObject({ cause });
+  });
+
+  it("keeps artifact failures fatal even when the CLI also closes stdin early", async () => {
+    const f = await lifetimeFixture(true);
+    f.child.stdin!.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
+    await expect(f.lifetime.finish(1)).rejects.toMatchObject({ cause: { code: "EISDIR" } });
+  });
+
+  it("preserves cancellation after EPIPE even if the process exits zero", async () => {
+    const f = await lifetimeFixture();
+    f.child.stdin!.emit("error", Object.assign(new Error("write EPIPE"), { code: "EPIPE" }));
+    f.controller.abort();
+    await expect(f.lifetime.finish(0)).resolves.toBeUndefined();
+    expect(f.lifetime.cancelled).toBe(true);
+    expect(JSON.parse(await fs.readFile(path.join(f.root, "heartbeat.json"), "utf8")).status).toBe("failed");
+  });
+});
 
 describe("native agent cancellation lifetime", () => {
   for (const Runner of runners) {

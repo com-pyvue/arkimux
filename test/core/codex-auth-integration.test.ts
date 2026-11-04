@@ -254,7 +254,7 @@ describe("Codex authentication integration", () => {
       "#!/bin/sh",
       "if [ \"$1\" = \"--version\" ]; then printf '%s\\n' 'codex-cli 0.0.0-test'; exit 0; fi",
       "if [ \"$1 $2\" = \"login status\" ]; then printf '%s\\n' 'Logged in using ChatGPT'; exit 0; fi",
-      "if [ \"$1\" = \"exec\" ]; then printf '%s\\n' '{\"type\":\"error\",\"message\":\"model is not available on your plan\"}'; exit 1; fi",
+      "if [ \"$1\" = \"exec\" ]; then exec 0<&-; printf '%s\\n' '{\"type\":\"error\",\"message\":\"model is not available on your plan\"}'; exit 1; fi",
       "exit 1",
     ].join("\n"), { mode: 0o700 });
     const config = providerConfig(parentHome, {
@@ -276,7 +276,8 @@ describe("Codex authentication integration", () => {
 
     const run = runner.run({
       cwd: root,
-      prompt: "fixture prompt",
+      // Exceed the pipe buffer so an early stdin close reliably fails a write.
+      prompt: "fixture prompt".repeat(200_000),
       timeoutMs: 5_000,
       authProviderId: "codex-native-session",
       artifactPrefix,

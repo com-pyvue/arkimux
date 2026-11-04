@@ -32,6 +32,7 @@ export function agentProcessLifetime(options: {
 }) {
   const { child, signal } = options;
   let stopped = false, processClosed = false, timedOut = false, cancelled = false, error: Error | undefined;
+  let closedInputError: Error | undefined;
   let writes = Promise.resolve(), escalation: ReturnType<typeof setTimeout> | undefined;
   const remember = (value: unknown) => { error ??= value instanceof Error ? value : new Error("Agent process cleanup failed."); };
   const kill = (kind: NodeJS.Signals) => {
@@ -66,7 +67,15 @@ export function agentProcessLifetime(options: {
   // remaining members on exit instead of waiting forever for close.
   const exit = () => { if (agentProcessDetached()) kill("SIGKILL"); };
   child.once("exit", exit);
-  const stdinError = (cause: unknown) => { remember(cause); kill("SIGKILL"); };
+  const stdinError = (cause: unknown) => {
+    // A CLI can reject a request before reading its prompt. Let it finish and
+    // flush its provider diagnostic instead of killing it or masking that error.
+    if (cause instanceof Error && (cause as NodeJS.ErrnoException).code === "EPIPE") {
+      closedInputError ??= cause;
+      return;
+    }
+    remember(cause); kill("SIGKILL");
+  };
   child.stdin?.on("error", stdinError);
   signal?.addEventListener("abort", abort, { once: true });
   write("running");
@@ -84,6 +93,9 @@ export function agentProcessLifetime(options: {
         child.stdin?.removeListener("error", stdinError);
         options.streams.forEach(stream => stream.end());
         await Promise.all(streamFinishes);
+        // A successful process must not hide a failed prompt write. Failed,
+        // cancelled and timed-out processes are interpreted by their runners.
+        if (exitCode === 0 && !timedOut && !cancelled && closedInputError) remember(closedInputError);
         const status = timedOut ? "timed-out" : cancelled || error || exitCode !== 0 ? "failed" : "complete";
         write(status); await writes;
         if (error) throw new AgentProcessCleanupError("Agent process or artifact cleanup failed.", { cause: error });
