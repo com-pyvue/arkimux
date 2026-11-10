@@ -16,8 +16,9 @@ separate authorization.
 Use documented public package imports for workflow examples. Preserve existing
 workflow/runtime contracts and explain any intentional compatibility change.
 Contributions are reviewed; submission does not guarantee acceptance or a
-maintenance commitment. A private security reporting route will be documented
-separately. Do not disclose vulnerabilities in public issues.
+maintenance commitment. Read [SECURITY.md](SECURITY.md) for safe reporting. Its
+private reporting route still needs confirmation. Do not disclose vulnerabilities
+in public issues.
 
 ## Licence and certification
 
