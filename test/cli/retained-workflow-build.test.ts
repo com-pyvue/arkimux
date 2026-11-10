@@ -94,21 +94,45 @@ describe("retained workflow build preparation", () => {
     const retained = await f.store.readBuild(first.manifest.buildSha256);
     expect(JSON.parse(Buffer.from(retained.files["construction.json"]).toString())).toEqual({ schemaVersion: 1, export: "first" });
   });
-  it("retains a real Core defineStep import without a monorepo fallback", async () => {
+  it("retains a real Core defineStep import without a monorepo fallback", async ({ onTestFailed }) => {
+    const started = performance.now(), completedStagesMs: Record<string, number> = {};
+    let activeStage = "fixture-setup", stageStarted = started;
+    const nextStage = (name: string) => {
+      const now = performance.now();
+      completedStagesMs[activeStage] = Math.round(now - stageStarted);
+      activeStage = name;
+      stageStarted = now;
+    };
+    // A timeout can leave the test body pending, so report through the runner's
+    // failure hook rather than relying on catch/finally inside the body.
+    onTestFailed(() => {
+      const now = performance.now();
+      console.error("Core package retention test timings (milliseconds):", JSON.stringify({
+        completedStagesMs, activeStage, activeStageMs: Math.round(now - stageStarted),
+        totalMs: Math.round(now - started),
+      }));
+    });
     const f = await project('import { defineStep } from "@com-pyvue/agent-execution-core"; export const step = defineStep({ schemaVersion: 1, id: "compute", definitionVersion: "v1", input: { parse: value => value }, output: { parse: value => value }, execute: async (_context, value) => value });');
     const directory = path.join(f.root, "node_modules/@com-pyvue/agent-execution-core"); await mkdir(directory, { recursive: true });
+    nextStage("Core-fixture-build");
     // Match core/build.mjs in a private fixture, not a potentially stale checkout dist.
     await bundle({ entryPoints: [fileURLToPath(new URL("../../core/src/index.ts", import.meta.url))],
       outfile: path.join(directory, "index.js"), bundle: true, platform: "node", target: "node20",
       format: "esm", sourcemap: false, packages: "bundle", logLevel: "silent" });
+    nextStage("package-metadata");
     await writeFile(path.join(directory, "package.json"), JSON.stringify({ name: "@com-pyvue/agent-execution-core", type: "module", exports: "./index.js" }));
+    nextStage("workflow-build");
     const result = await prepareRetainedWorkflowBuild(f.store, f.options);
+    nextStage("output-checks");
     expect(Object.keys(result.manifest.preparation!.inputFiles)).toContain("node_modules/@com-pyvue/agent-execution-core/index.js");
     const retained = await f.store.readBuild(result.manifest.buildSha256);
     expect(Buffer.from(retained.files["entry.mjs"]).toString()).not.toContain("agent-execution-platform");
+    nextStage("module-import");
     const module = await import(`data:text/javascript;base64,${Buffer.from(retained.files["entry.mjs"]).toString("base64")}`);
+    nextStage("step-execution");
     expect(await module.step.execute({}, { city: "London" })).toEqual({ city: "London" });
-  });
+    nextStage("complete");
+  }, 15_000);
   it("builds once, reuses unchanged content and does not read environment or project build config", async () => {
     const f = await project();
     const first = await prepareRetainedWorkflowBuild(f.store, f.options);
