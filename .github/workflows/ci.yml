@@ -11,6 +11,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - run: node --test test/cli/dco.test.mjs
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
