@@ -15,6 +15,7 @@ it("starts the real CLI child, reloads its registry and active role at one addre
   let deadline: ReturnType<typeof setTimeout> | undefined;
   let stopDeadline: ReturnType<typeof setTimeout> | undefined;
   let stderr = "";
+  let failed = false;
   try {
     await mkdir(path.join(root, "src"));
     const installed = path.join(root, "node_modules/@com-pyvue/agent-execution-local");
@@ -59,6 +60,15 @@ it("starts the real CLI child, reloads its registry and active role at one addre
       "--permission", "workflow:alpha:start", "--permission", "workflow:alpha:configure"], root, {});
     const record = path.join(root, ".arkimux/local/processes/local-server.json");
     await mkdir(path.dirname(record), { recursive: true });
+    const writeRecord = async (value: unknown) => {
+      const temporary = `${record}.${randomUUID()}.tmp`;
+      try {
+        await writeFile(temporary, `${JSON.stringify(value)}\n`, { flag: "wx", mode: 0o600 });
+        await rename(temporary, record);
+      } finally {
+        await rm(temporary, { force: true });
+      }
+    };
     const token = randomUUID(), started = Date.now();
     child = spawn(process.execPath, [path.resolve("cli/dist/local-server.js"), "--port", "0", "--project-root", root, "--process-token", token], {
       cwd: root, env: { PATH: process.env.PATH, ARKIMUX_LOCAL_PROCESS_TOKEN: token, LANG: "en_US.UTF-8", TZ: "UTC" },
@@ -67,7 +77,7 @@ it("starts the real CLI child, reloads its registry and active role at one addre
     child.stderr!.on("data", chunk => { stderr = (stderr + String(chunk)).slice(-12_000); });
     exited = once(child, "exit");
     const owned = { schemaVersion: 1, pid: child.pid, token, projectRoot: root, url: "http://127.0.0.1:0", roleId: "arkimux-workflow-developer-v1" };
-    const recorded = writeFile(record, `${JSON.stringify(owned)}\n`, { mode: 0o600 });
+    const recorded = writeRecord(owned);
     const ready = new Promise<string>((resolve, reject) => {
       deadline = setTimeout(() => reject(new Error(`CLI startup exceeded 30 seconds. ${stderr}`)), 30_000);
       child!.on("message", message => {
@@ -80,8 +90,10 @@ it("starts the real CLI child, reloads its registry and active role at one addre
           } else if (value.kind === "arkimux-local-ready") {
             // Mirror the CLI parent's port-0 acknowledgement without overwriting
             // the child-owned active role update made during initial activation.
+            // Replace atomically, as the real CLI does: the child reads this file
+            // concurrently while waiting for its final address.
             const active = JSON.parse(await readFile(record, "utf8"));
-            await writeFile(record, `${JSON.stringify({ ...active, url: value.url })}\n`, { mode: 0o600 });
+            await writeRecord({ ...active, url: value.url });
             clearTimeout(deadline);
             resolve(value.url);
           }
@@ -127,11 +139,17 @@ it("starts the real CLI child, reloads its registry and active role at one addre
       stopDeadline = setTimeout(() => reject(new Error("CLI did not stop")), 5000);
     })])).toEqual([0, null]);
     await expect(fetch(`${url}/arkimux/workflow-registry`)).rejects.toThrow();
+  } catch (error) {
+    failed = true;
+    throw error;
   } finally {
     clearTimeout(deadline);
     clearTimeout(stopDeadline);
     if (child && child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
     await exited;
+    if (failed) console.error(`Local reload test child diagnostics: pid=${child?.pid ?? "not started"}, `
+      + `exitCode=${child?.exitCode ?? "none"}, signal=${child?.signalCode ?? "none"}\n`
+      + `Child stderr:\n${stderr.trim() || "(empty)"}`);
     await rm(root, { recursive: true, force: true });
   }
 }, 60_000);
