@@ -22,8 +22,9 @@ and ask for a private channel. There is no response-time or bounty promise.
 Local is a development server, not an internet-facing multi-user hosting service.
 Keep it bound to loopback; do not expose it through a public tunnel or reverse
 proxy without a separately reviewed security design. Protect the OS account and
-files. Provider keys entered in Local currently use plaintext mode-0600 files,
-not an encrypted production vault. Native CLIs and telemetry use different
+files. Local stores provider keys in plaintext. It requests mode `0600` for new
+POSIX key files; migrated files keep their existing permissions. On Windows,
+check the file's access control list. Native CLIs and telemetry use different
 credential paths; see [Privacy](docs/legal/PRIVACY-NOTICE.md).
 
 Normal workflows can execute real tools, effects and provider requests. Review

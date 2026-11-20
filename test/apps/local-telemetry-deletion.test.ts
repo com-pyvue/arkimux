@@ -13,6 +13,14 @@ function fixture() {
   return { app, requestDeletion };
 }
 const headers = { "content-type": "application/json", authorization: "Bearer local-session", origin: "http://localhost:1234" };
+it("requires the deletion route's session and origin checks when Do not share can withdraw data", async () => {
+  const f = fixture();
+  const send = (h: typeof headers) => f.app.request("/api/v1/local/privacy", {
+    method:"PUT", headers:h, body:JSON.stringify({choice:"no"}) });
+  expect((await send({...headers, authorization:""})).status).toBe(401);
+  expect((await send({...headers, origin:"https://untrusted.example"})).status).toBe(403);
+  expect((await send(headers)).status).toBe(200);
+});
 it("requires a Local session, allowed origin and explicit confirmation", async () => {
   const f = fixture();
   for (const input of [

@@ -34,6 +34,15 @@ async function fixture() {
 }
 
 describe("event-first Local sender", () => {
+  it("does not carry earlier Yes or queued events into the withdrawal archive notice",async()=>{
+    const f=await fixture();
+    await f.sender.choose("yes");
+    const next=new LocalEventTelemetry({...f.options,config:{...config,privacy:{...config.privacy,noticeVersion:"usage-with-withdrawal-archive-v1"}}});
+    expect(await next.status()).toMatchObject({choice:"undecided",sharingEnabled:false,privacyNoticeVersion:"usage-with-withdrawal-archive-v1-disclosed"});
+    await next.start(); await next.flush(); expect(f.sent).toHaveLength(0);
+    await next.choose("yes"); await next.flush();
+    expect(f.sent.flat().map(e=>e.kind)).toEqual(["arkimux.event.consent.success"]);
+  });
   it("keeps privacy history across deletion, restart and a new identity without new telemetry kinds", async () => {
     const f = await fixture();
     await f.sender.choose("ask-later"); expect((await f.sender.status()).privacyHistory).toEqual([]);
@@ -60,8 +69,8 @@ describe("event-first Local sender", () => {
     expect(JSON.stringify(status)).not.toMatch(/registrationId|ACCESS_SECRET|REFRESH_SECRET|"epoch"/);
     expect(f.sent.flat().map(e => e.kind)).toEqual(["arkimux.event.consent.success", "arkimux.event.consent.success"]);
     await restarted.choose("no"); await restarted.choose("no");
-    expect((await restarted.status()).privacyHistory).toHaveLength(6);
-    expect((await restarted.status()).privacyHistory[0]).toMatchObject({ kind: "sharing_stopped", installationId: newSub });
+    expect((await restarted.status()).privacyHistory).toHaveLength(7);
+    expect((await restarted.status()).privacyHistory[0]).toMatchObject({ kind: "deletion_requested", installationId: newSub });
   });
   it("recovers only known legacy history and never assigns a new installation to an old receipt", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush();
@@ -98,7 +107,7 @@ describe("event-first Local sender", () => {
     const f = await fixture(); await f.sender.choose("yes");
     await f.state.update(s => { s.consent!.notice = `${config.privacy.noticeVersion}-framework-stacks-v1`; });
     expect(await f.sender.status()).toMatchObject({ choice: "undecided", sharingEnabled: false,
-      privacyNoticeVersion: `${config.privacy.noticeVersion}-usage-only-v1-query-expiry-v1` });
+      privacyNoticeVersion: `${config.privacy.noticeVersion}-usage-only-v1-query-expiry-v1-withdrawal-v1` });
     await f.sender.flush(); expect(f.transport.register).not.toHaveBeenCalled(); expect(f.sent).toEqual([]);
     await f.sender.choose("yes"); await f.sender.flush();
     expect(f.sent.flat().map(event => event.kind)).toEqual(["arkimux.event.consent.success"]);
@@ -111,7 +120,7 @@ describe("event-first Local sender", () => {
     await f.sender.choose("yes"); await f.sender.flush();
     expect(f.sent.flat().map(event => event.kind)).toEqual(["arkimux.event.consent.success"]);
   });
-  it("deletes shared data separately, stops sharing immediately and clears the credential only after acknowledgement", async () => {
+  it("retains deletion access after opt-out and clears the credential only on confirmed completion", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush();
     const epoch = (await f.read()).consent!.epoch;
     expect((await f.sender.status()).canDeleteSharedData).toBe(true);
@@ -122,7 +131,13 @@ describe("event-first Local sender", () => {
     await f.sender.flush();
     expect(f.transport.requestDeletion).toHaveBeenCalledTimes(1);
     expect(await f.sender.status()).toMatchObject({ deletionRequest: { status: "accepted", receipt: { status: "accepted" } } });
-    await f.sender.flush(); expect(f.secrets.has(epoch)).toBe(false);
+    expect((await f.sender.status()).hasUnrequestedEarlierWithdrawal).toBe(false);
+    expect((await f.sender.status()).canDeleteSharedData).toBe(true);
+    const receipt = (await f.sender.status()).deletionRequest!.receipt!;
+    f.transport.requestDeletion.mockResolvedValueOnce({ ...receipt, status: "data_removed" } as any);
+    await f.sender.requestDeletion(); await f.sender.flush(); await f.sender.flush();
+    expect((await f.sender.status()).privacyHistory[0].kind).toBe("deletion_completed");
+    expect(f.secrets.has(epoch)).toBe(false);
     expect(f.sent).toHaveLength(1);
   });
   it("retries a deletion after restart without registering a new identity or sending usage", async () => {
@@ -142,17 +157,46 @@ describe("event-first Local sender", () => {
     await changed.flush(); expect(f.transport.requestDeletion).not.toHaveBeenCalled();
     expect(f.vault.delete).not.toHaveBeenCalled();
   });
-  it("No only stops sharing and cannot silently request remote deletion", async () => {
+  it("No stops uploads immediately and retries authenticated withdrawal after an offline restart", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush();
-    await f.sender.choose("no"); await f.sender.flush();
-    expect(f.transport.requestDeletion).not.toHaveBeenCalled();
-    await expect(f.sender.requestDeletion()).rejects.toThrow("No authenticated sharing identity");
+    await f.sender.start(); await f.sender.choose("no");
+    expect(await f.sender.status()).toMatchObject({choice:"declined", sharingEnabled:false, pendingEventCount:0});
+    f.transport.requestDeletion.mockRejectedValueOnce(new TelemetryTransportError("retry"));
+    await f.sender.flush(); f.advance(6000); await new LocalEventTelemetry(f.options).flush();
+    expect(f.transport.requestDeletion).toHaveBeenCalledTimes(2);
+    expect(f.transport.send).toHaveBeenCalledTimes(1);
   });
   it("does not report a missing deletion credential as success", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush(); await f.sender.requestDeletion();
     f.secrets.clear(); await f.sender.flush();
     expect(await f.sender.status()).toMatchObject({ deletionRequest: { status: "pending" }, deliveryState: "credential-rejected" });
     expect(f.transport.requestDeletion).not.toHaveBeenCalled();
+  });
+  it("keeps prior proof solely for withdrawal when reconsenting, even before the new account registers",async()=>{
+    const f=await fixture(); await f.sender.choose("yes"); await f.sender.flush(); await f.sender.start();
+    const old=(await f.read()).consent!.epoch;
+    const next=new LocalEventTelemetry({...f.options,config:{...config,privacy:{...config.privacy,noticeVersion:"changed-notice"}}});
+    await next.choose("yes");
+    expect(f.transport.requestDeletion).not.toHaveBeenCalled(); expect(f.secrets.has(old)).toBe(true);
+    expect((await f.read()).outbox.map(x=>x.event.kind)).toEqual(["arkimux.event.consent.success"]);
+    const newEpoch=(await f.read()).consent!.epoch; expect(newEpoch).not.toBe(old);
+    await next.requestDeletion(); expect((await next.status()).sharingEnabled).toBe(false);
+    const receipt={schema_version:1,request_id:randomUUID(),requested_at:new Date().toISOString(),completion_due_at:new Date().toISOString(),status:"data_removed"} as const;
+    f.transport.requestDeletion.mockResolvedValueOnce(receipt as any);
+    await next.flush(); await next.flush();
+    expect(f.transport.requestDeletion).toHaveBeenCalledTimes(1); expect(f.transport.send).toHaveBeenCalledTimes(1);
+    expect(f.transport.register).toHaveBeenCalledTimes(1); expect(f.secrets.has(old)).toBe(false);
+    expect(JSON.stringify(await next.status())).not.toContain("registrationId");
+  });
+  it("can withdraw a registered installation after its previous notice is no longer current", async () => {
+    const f=await fixture(); await f.sender.choose("yes"); await f.sender.flush();
+    await f.state.update(s=>{s.consent!.notice="old-notice";});
+    expect((await f.sender.status()).sharingEnabled).toBe(false);
+    expect((await f.sender.status()).canDeleteSharedData).toBe(true);
+    await f.sender.choose("no"); await f.sender.flush();
+    expect((await f.sender.status()).choice).toBe("declined");
+    expect(f.transport.requestDeletion).toHaveBeenCalledTimes(1);
+    expect(f.transport.send).toHaveBeenCalledTimes(1);
   });
   it("exposes indefinite retention explicitly and requires fresh consent when policy changes", async () => {
     const f = await fixture(); await f.sender.choose("yes");
@@ -295,24 +339,14 @@ describe("event-first Local sender", () => {
         else f.vault.set.mockImplementationOnce(async (key, value) => { f.secrets.set(key, value); await changeConsent(); });
         await f.sender.flush();
         expect(f.transport.send).toHaveBeenCalledTimes(1);
-        if (choice === "no" || choice === "replace") {
-          expect(f.secrets.has(epoch)).toBe(false);
-          await f.sender.flush();
-          expect((await f.read()).pendingDeletes).toEqual([]);
-          if (choice === "replace") {
-            const replacement = await f.read();
-            expect(replacement.consent!.epoch).not.toBe(epoch);
-            expect(f.secrets.has(replacement.consent!.epoch)).toBe(true);
-            expect((await f.sender.status()).deliveryState).toBe("connected");
-          }
-        } else {
+        expect(f.secrets.has(epoch)).toBe(true);
+        expect(f.vault.delete).not.toHaveBeenCalled();
+        await new LocalEventTelemetry(f.options).flush();
+        if (choice === "yes") expect((await f.sender.status()).deliveryState).toBe("connected");
+        else {
+          expect(f.transport.requestDeletion).toHaveBeenCalledTimes(1);
+          expect((await f.sender.status()).sharingEnabled).toBe(false);
           expect(f.secrets.has(epoch)).toBe(true);
-          expect(f.vault.delete).not.toHaveBeenCalled();
-          await new LocalEventTelemetry(f.options).flush();
-          if (choice === "delete") {
-            expect(f.transport.requestDeletion).toHaveBeenCalledTimes(1);
-            await f.sender.flush(); expect(f.secrets.has(epoch)).toBe(false);
-          } else expect((await f.sender.status()).deliveryState).toBe("connected");
         }
       });
     }
@@ -333,6 +367,9 @@ describe("event-first Local sender", () => {
   });
   it("retains failed credential deletion for retry but never resumes sending", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush(); await f.sender.choose("no");
+    f.transport.requestDeletion.mockResolvedValueOnce({schema_version:1,request_id:randomUUID(),
+      requested_at:new Date().toISOString(),completion_due_at:new Date().toISOString(),status:"data_removed"} as any);
+    await f.sender.flush();
     f.vault.delete.mockRejectedValueOnce(new Error("locked")); await f.sender.flush();
     expect((await f.sender.status()).credentialDeletionPending).toBe(true);
     f.advance(10000); await f.sender.flush(); expect((await f.sender.status()).credentialDeletionPending).toBe(false);
@@ -433,6 +470,16 @@ describe("event-first Local sender", () => {
 });
 
 describe("Cognito HTTP transport", () => {
+  it("attests the archive notice only on a consent upload from the new configuration", async()=>{
+    for(const [notice,kind,shouldMark] of [["old","arkimux.event.consent.success",false],
+      ["usage-with-withdrawal-archive-v1","arkimux.event.local.start",false],
+      ["usage-with-withdrawal-archive-v1","arkimux.event.consent.success",true]] as const) {
+      const event={...transportUsage(),kind};
+      const fetcher=vi.fn(async (_url:unknown,_init?:RequestInit)=>Response.json({accepted_event_ids:[event.event_id]},{status:202}));
+      await createTelemetryTransport({...config,privacy:{...config.privacy,noticeVersion:notice}},fetcher).send([event],"access",new AbortController().signal);
+      expect(new Headers(fetcher.mock.calls[0][1]?.headers).get("x-arkimux-consent-notice")).toBe(shouldMark ? notice : null);
+    }
+  });
   it("rejects error content before making an HTTP request, including mixed batches", async () => {
     const f = await fixture(); await f.sender.choose("yes");
     const usage = (await f.read()).outbox[0].event;

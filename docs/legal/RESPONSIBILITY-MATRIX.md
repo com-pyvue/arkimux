@@ -14,11 +14,12 @@ computer. It is not an ArkiMux-operated production hosting service.
 | Availability and security | Local development controls and documented limits | Restrict access to the machine, patch dependencies, monitor workloads and handle incidents |
 | Updates and compatibility | Versioned code and documented tested behavior | Pin versions, test upgrades and maintain custom adapters |
 | Support | The support policy adopted for the release | Keep reproducible examples and redact evidence before sharing |
-| Usage sharing | Optional bounded usage collection and a separate deletion action | Choose whether to share; protect the retained installation credential if deletion is needed |
+| Usage sharing | Optional bounded collection; opting out also requests withdrawal of shared data | Choose whether to share; keep the OS credential available until removal is confirmed |
 
-Provider API keys entered in Local are currently stored as plaintext files with
-owner-only mode-0600 permissions under `.arkimux/local/credentials/values`. This
-is not an encrypted production vault. Native CLIs manage their own login storage.
+Local stores provider API keys as plaintext under `.arkimux/local/credentials/values`.
+It requests mode `0600` for new POSIX key files. Migration keeps existing file
+permissions; check them after migrating. On Windows, check the file's access
+control list. Native CLIs manage their own login storage.
 Telemetry posting credentials use the OS credential store; that is a different
 credential path. See the [privacy notice](PRIVACY-NOTICE.md).
 

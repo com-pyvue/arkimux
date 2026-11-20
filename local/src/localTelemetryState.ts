@@ -8,7 +8,7 @@ import { usageEventSchema, uuid, installationId, deletionReceiptSchema } from "@
 
 export const TELEMETRY_TTL = 7 * 86400_000;
 const decision = z.strictObject({ choice: z.enum(["accepted", "declined"]), notice: z.string(),
-  target: z.string(), at: z.string().datetime(), epoch: uuid });
+  target: z.string(), recipient: z.string().optional(), at: z.string().datetime(), epoch: uuid });
 const queued = z.strictObject({ project: z.string(), event: usageEventSchema });
 const privacyHistoryEntry = z.strictObject({ id: uuid, epoch: uuid,
   kind: z.enum(["consent_granted", "sharing_stopped", "deletion_requested", "deletion_accepted", "deletion_completed"]),
@@ -20,7 +20,13 @@ export const telemetryStateSchema = z.strictObject({
   version: z.literal(1), consent: decision.optional(),
   identity: z.strictObject({ registrationId: uuid, sub: installationId.optional(), credentialCreated: z.boolean() }).optional(),
   pendingDeletes: z.array(uuid).max(100),
+  // Accepted is not completed. These credentials can only check/renew an
+  // existing request, including after another consent epoch starts.
+  confirmations: z.array(z.strictObject({ epoch: uuid, registrationId: uuid, target: z.string(),
+    recipient: z.string().optional(), installationId: installationId.optional(), receipt: deletionReceiptSchema.optional(),
+    heldForDeletion: z.boolean().optional(), retryAt: z.number() })).optional(),
   remoteDeletion: z.strictObject({ epoch: uuid, registrationId: uuid, target: z.string(),
+    recipient: z.string().optional(),
     installationId: installationId.optional(), requestedAt: z.string().datetime().optional(),
     status: z.enum(["pending", "accepted"]), receipt: deletionReceiptSchema.optional() }).optional(),
   privacyHistory: z.array(privacyHistoryEntry).optional(),

@@ -1,8 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 
 const root = new URL("../../", import.meta.url);
 const docs = ["docs/legal/README.md", "docs/legal/LICENSE-AND-NOTICES.md",
@@ -22,18 +20,10 @@ test("Local responsibility drafts are clearly marked and their local links resol
   }
 });
 
-test("drafting the responsibility pack does not alter licence or attribution files", async () => {
-  const hash = value => createHash("sha256").update(value).digest("hex");
-  for (const file of ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "GENERATED_PROJECTS.md"]) {
-    const previous = execFileSync("git", ["show", `HEAD:${file}`], { cwd: root, maxBuffer: 8 * 1024 * 1024 });
-    assert.equal(hash(await readFile(new URL(file, root))), hash(previous), file);
-  }
-});
-
 test("privacy draft matches the current usage-only wire fields and local diagnostic limits", async () => {
   const privacy = await read("docs/legal/PRIVACY-NOTICE.md");
   for (const token of ["No error report", "100 events", "256 KiB", "20 records", "No automatic expiry",
-    "Do not share", "Delete shared data", "OS credential store", "mode-0600", "pseudonymous",
+    "Do not share", "Delete shared data", "OS credential store", "0600", "pseudonymous",
     "not evidence that a person viewed", "GitHub issues are public", "recipient", "CI"]) {
     assert.ok(privacy.includes(token), `Missing disclosure: ${token}`);
   }

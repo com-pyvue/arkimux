@@ -240,20 +240,20 @@ describe("integrated Agent Execution web host", () => {
 
   it("shows a failed deletion once through the shared copyable toaster and retains confirmation for retry", async () => {
     window.history.replaceState({}, "", "/settings/privacy");
-    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request) => {
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const route = new URL(String(input)).pathname;
-      if (route === "/api/v1/local/privacy/deletion") return json({ error: { message: "This origin is not allowed." } }, 403);
+      if (route === "/api/v1/local/privacy" && init?.method === "PUT") return json({ error: { message: "This origin is not allowed." } }, 403);
       if (route === "/api/v1/local/privacy") return json({ ...privacyStatus("accepted", false), canDeleteSharedData: true });
       return json({}, 404);
     }));
     render(<AgentExecutionWebApp apiBaseUrl="http://api.test" session={{ cacheKey: "delete-failure" }} resultPlugins={[]} uiConfiguration={agentExecutionUiConfiguration("workflow-development")} />);
-    await userEvent.click(await screen.findByRole("button", { name: "Delete shared data" }));
-    await userEvent.click(screen.getByRole("button", { name: "Confirm delete shared data" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Stop sharing…" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirm stop sharing" }));
     const toast = await screen.findByRole("alert");
     expect(toast.textContent).toContain("This origin is not allowed.");
     expect(screen.getAllByText("This origin is not allowed.")).toHaveLength(1);
     expect(within(toast).getByRole("button", { name: "Copy error" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Confirm delete shared data" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Confirm stop sharing" })).toBeTruthy();
     expect(screen.queryByText(/service accepted your deletion request/)).toBeNull();
   });
 
@@ -262,7 +262,7 @@ describe("integrated Agent Execution web host", () => {
     const posts: unknown[] = [];
     vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const route = new URL(String(input)).pathname;
-      if (route === "/api/v1/local/privacy/deletion") {
+      if (route === "/api/v1/local/privacy" && init?.method === "PUT") {
         posts.push(JSON.parse(String(init?.body)));
         return json({ ...privacyStatus("declined", false), canDeleteSharedData: false,
           deletionRequest: { status: "pending" }, deliveryState: "retrying" }, 202);
@@ -271,18 +271,39 @@ describe("integrated Agent Execution web host", () => {
       return json({ items: [], pagination: {} });
     }));
     render(<AgentExecutionWebApp apiBaseUrl="http://api.test" session={{ cacheKey: "delete-sharing" }} resultPlugins={[]} uiConfiguration={agentExecutionUiConfiguration("workflow-development")} />);
-    await userEvent.click(await screen.findByRole("button", { name: "Delete shared data" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Stop sharing…" }));
     expect(posts).toEqual([]);
     expect(screen.getByText(/source usage data within seven days/)).toBeTruthy();
     expect(screen.queryByText(/previously collected diagnostics/)).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(posts).toEqual([]);
-    await userEvent.click(screen.getByRole("button", { name: "Delete shared data" }));
-    await userEvent.click(screen.getByRole("button", { name: "Confirm delete shared data" }));
-    expect(posts).toEqual([{ confirm: true }]);
+    await userEvent.click(screen.getByRole("button", { name: "Stop sharing…" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirm stop sharing" }));
+    expect(posts).toEqual([{ choice: "no" }]);
     expect(await screen.findByText(/waiting to submit your deletion request/)).toBeTruthy();
     expect((screen.getByRole("button", { name: "Share usage" }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.queryByText(/service accepted your deletion request/)).toBeNull();
+  });
+
+  it.each([false,true])("offers earlier deletion only for unrequested data (available: %s)", async (available) => {
+    window.history.replaceState({}, "", "/settings/privacy");
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      if(init?.method === "POST") calls.push(new URL(String(input)).pathname);
+      return json({...privacyStatus("declined",false), hasUnrequestedEarlierWithdrawal:available && !calls.length});
+    }));
+    render(<AgentExecutionWebApp apiBaseUrl="http://api.test" session={{cacheKey:"privacy-earlier"}} resultPlugins={[]} uiConfiguration={agentExecutionUiConfiguration("workflow-development")} />);
+    expect(await screen.findByRole("button",{name:"Share usage"})).toBeTruthy();
+    expect(screen.queryByRole("button",{name:"Do not share"})).toBeNull();
+    const earlier = screen.queryByRole("button",{name:"Delete earlier shared data…"});
+    expect(Boolean(earlier)).toBe(available);
+    if(earlier){
+      await userEvent.click(earlier);
+      expect(calls).toEqual([]);
+      await userEvent.click(screen.getByRole("button",{name:"Confirm deletion"}));
+      expect(calls).toEqual(["/api/v1/local/privacy/deletion"]);
+      expect(screen.queryByRole("button",{name:"Delete earlier shared data…"})).toBeNull();
+    }
   });
 
   it("distinguishes loading and failed Diagnostics from an empty list, and allows retry", async () => {

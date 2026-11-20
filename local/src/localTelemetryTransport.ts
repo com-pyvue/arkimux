@@ -14,6 +14,7 @@ export const senderConfigSchema = z.strictObject({
   maxBodyBytes: z.number().int().min(1024).max(128 * 1024),
 });
 export type SenderConfig = z.infer<typeof senderConfigSchema>;
+export const archiveNotice = "usage-with-withdrawal-archive-v1";
 export interface InstallationCredential { secret: string; refreshToken?: string }
 export interface SecretStore {
   get(key: string): Promise<InstallationCredential | undefined>;
@@ -105,7 +106,9 @@ export function createTelemetryTransport(config: SenderConfig, fetcher: typeof f
       try { parseUsageBatch({ events }, { maxBodyBytes: config.maxBodyBytes, maxBatchEvents: config.maxBatchEvents }); }
       catch { throw new TelemetryTransportError("invalid"); }
       const { response, value } = await request(`${base}v1/events`, { events },
-        { "content-type": "application/json", authorization: `Bearer ${accessToken}` }, signal);
+        { "content-type": "application/json", authorization: `Bearer ${accessToken}`,
+          ...(config.privacy.noticeVersion === archiveNotice && events.some(e=>e.kind==="arkimux.event.consent.success")
+            ? { "x-arkimux-consent-notice": archiveNotice } : {}) }, signal);
       if (response.status === 401) throw new TelemetryTransportError("unauthorized");
       if (response.status === 403) throw new TelemetryTransportError("rejected");
       if ([400, 410, 413, 422].includes(response.status)) throw new TelemetryTransportError("invalid");

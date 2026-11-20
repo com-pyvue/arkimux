@@ -1,8 +1,8 @@
 # Local privacy notice
 
-Draft for owner review, prepared 5 November 2026. This describes the current
-usage-only Local implementation. It does not change the notice version displayed
-by an installed Local server or replace an existing sharing choice. The legal
+Draft for owner review, updated 19 November 2026. This describes the Local
+candidate with authenticated withdrawal. Older installed versions may behave
+differently. This version requires a fresh choice before sending usage. The legal
 operator, public contact route and effective date must be confirmed before this
 becomes a final public notice.
 
@@ -14,8 +14,11 @@ to external services or change external systems. Review the permissions and
 policies of those services; disabling ArkiMux usage sharing does not disable
 workflow network calls or a provider's own data collection.
 
-Provider API keys entered in Local are stored in plaintext mode-0600 project
-files, not an encrypted vault. Native provider CLIs manage their own login data.
+Local stores provider API keys in plaintext project files, not an encrypted
+vault. On POSIX systems Local requests mode `0600` (owner read/write) for new
+key files; migration preserves an existing file's permissions, which may be
+broader. On Windows, check the file's access control list. Native provider CLIs
+manage their own login data.
 Neither is the telemetry posting credential, which uses the OS credential store.
 Protect the host and exclude credentials and local state from source control.
 
@@ -73,18 +76,32 @@ configured notice rather than inferred from this draft.
 
 ## Stop sharing and delete uploaded usage
 
-Do not share stops new uploads, clears queued usage and retires the local posting
-identity/credential. It does not request deletion of usage already uploaded, and
-cannot recall an in-flight request.
+Before sharing, choose **Share usage** or **Do not share**. When already sharing,
+**Stop sharing… → Confirm stop sharing** stops collection and upload immediately,
+clears unsent usage and requests authenticated withdrawal. Earlier clients label
+this action **Delete shared data**. After stopping, the Privacy page shows a
+separate deletion action only for earlier linked data not yet requested for
+withdrawal. An in-flight
+upload cannot be recalled. Local retries offline requests without renewed
+consent. The service removes the installation's source data and catalog entries
+within seven days. An accepted request is not confirmation of removal. Local
+keeps the credential to follow up until the service confirms completion.
+Accepting a new notice starts a fresh sharing identity. Local keeps the old
+credential in the OS credential store solely to withdraw the old installation.
+It does not use that credential to upload usage or send a withdrawal merely
+because you chose Yes. Requests go only to the original recipient.
+Minimal deletion records remain to reject old uploads; privacy history stays
+on this computer. Older versions that already discarded a credential cannot
+recover it from the installation ID alone.
 
-Delete shared data is a separate authenticated action in Settings > Privacy.
-Use it before choosing No: the installation credential is needed to prove which
-data to delete. It stops sharing and clears pending usage immediately. An offline
-request remains pending; acceptance is not proof of completed deletion. After
-acceptance, the service removes the installation's source data and catalog
-entries within seven days. Minimal deletion/suppression records remain to reject
-old uploads; they are not analytics. Local removes the posting credential after
-the request is accepted. Privacy history remains on this computer.
+Only the dev-3 walkthrough with a fresh Yes to the withdrawal archive notice
+retains a reduced journey indefinitely after withdrawal: consent month, ordered
+event kinds, journey-local operation numbers and relative timing with a validity
+flag, under a new random journey key. Original IDs, exact dates/times and build
+version are removed. After conversion, the archive cannot be deleted by
+installation ID. Older consent and other environments do not qualify. Replacing
+identifiers with random journey keys and keeping relative timing would not, by
+itself, make a distinctive sequence anonymous.
 
 Existing query-result files are not purged by that action and expire on the
 file-age basis above. In-flight queries are not cancelled; downloaded reports

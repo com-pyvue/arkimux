@@ -86,3 +86,8 @@ owners must then make the status check named `DCO` required in protected-branch
 or ruleset settings. Source files alone do not activate that merge restriction.
 Preserve sign-offs when merging or squashing, and review changes to the checker.
 A future merge queue needs its own event wiring before using this PR-only check.
+
+Changes to the root `LICENSE` or `NOTICE` require repository owner review.
+Propose legitimate updates by pull request and explain the reason. The owner
+is named in [.github/CODEOWNERS](.github/CODEOWNERS); GitHub enforces approval
+only when the target branch requires code-owner review.
