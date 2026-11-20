@@ -1,0 +1,8 @@
+# Public com-pyvue/arkimux only. Each contributor listed below agrees:
+# When I explicitly ask an agent to commit changes as me, that request is my
+# DCO 1.1 certification for those changes. Record it with my sign-off.
+# Enrollment and removal: see CONTRIBUTING.md.
+contributors:
+  - github_login: yuryprokashev
+    git_name: yuryprokashev
+    git_email: 7362515+yuryprokashev@users.noreply.github.com

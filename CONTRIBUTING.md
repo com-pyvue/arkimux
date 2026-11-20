@@ -58,6 +58,18 @@ The name/email becomes public, long-lived commit history. AI assistance does not
 remove the contributor's responsibility to have the right to submit the work.
 Using ArkiMux without contributing does not require signing anything.
 
+### Optional agent-assisted sign-off
+
+To opt in, open a PR from your own GitHub account adding only your own entry
+to the [opt-in registry](.github/dco-opt-ins.yml). Maintainers verify the PR
+author matches the listed login. Sign the enrollment commit explicitly:
+an entry takes effect only after it lands on `main`. To opt out, remove your
+entry by PR; you may also tell your agent to stop immediately.
+
+Opt-in makes your explicit request to commit as you a certification for those
+changes only. It does not certify future work in advance, permit signing for
+anyone else, or replace the signed trailer on each commit.
+
 ## Pull request check
 
 The `DCO` check inspects every PR-head commit not already in the target base
