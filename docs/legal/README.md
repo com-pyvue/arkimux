@@ -42,8 +42,9 @@ source, dependency and notice checks.
 
 ## Decisions still needed
 
-The final pack needs the legal operator and trademark owner, public privacy and
-security contact routes, and an effective date. The proposed support and trademark
+The final pack needs the legal operator and trademark owner, a public privacy
+contact, and an effective date. The [security reporting channel](../../SECURITY.md)
+is available now and is not the privacy contact. The proposed support and trademark
 policies also need owner approval. Those are review drafts, not promises that
 those policies or contact channels are active.
 Whether to obtain external legal review will be decided separately.

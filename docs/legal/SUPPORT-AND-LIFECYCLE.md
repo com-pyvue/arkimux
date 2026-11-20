@@ -13,7 +13,7 @@ readiness. Acknowledging an issue is not a promise to fix it.
 
 Use [security reporting](../../SECURITY.md), not a public issue, for private
 vulnerability details. Never include credentials, customer data or unreviewed
-diagnostics. Support and security contact routes must be confirmed before release.
+diagnostics. The proposed general support route still needs confirmation before release.
 
 ## Versions and compatibility
 
