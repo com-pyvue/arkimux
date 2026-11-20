@@ -16,8 +16,9 @@ separate authorization.
 Use documented public package imports for workflow examples. Preserve existing
 workflow/runtime contracts and explain any intentional compatibility change.
 Contributions are reviewed; submission does not guarantee acceptance or a
-maintenance commitment. A private security reporting route will be documented
-separately. Do not disclose vulnerabilities in public issues.
+maintenance commitment. Read [SECURITY.md](SECURITY.md) for safe reporting. Its
+private reporting route still needs confirmation. Do not disclose vulnerabilities
+in public issues.
 
 ## Licence and certification
 
@@ -57,6 +58,18 @@ The name/email becomes public, long-lived commit history. AI assistance does not
 remove the contributor's responsibility to have the right to submit the work.
 Using ArkiMux without contributing does not require signing anything.
 
+### Optional agent-assisted sign-off
+
+To opt in, open a PR from your own GitHub account adding only your own entry
+to the [opt-in registry](.github/dco-opt-ins.yml). Maintainers verify the PR
+author matches the listed login. Sign the enrollment commit explicitly:
+an entry takes effect only after it lands on `main`. To opt out, remove your
+entry by PR; you may also tell your agent to stop immediately.
+
+Opt-in makes your explicit request to commit as you a certification for those
+changes only. It does not certify future work in advance, permit signing for
+anyone else, or replace the signed trailer on each commit.
+
 ## Pull request check
 
 The `DCO` check inspects every PR-head commit not already in the target base
@@ -85,3 +98,8 @@ owners must then make the status check named `DCO` required in protected-branch
 or ruleset settings. Source files alone do not activate that merge restriction.
 Preserve sign-offs when merging or squashing, and review changes to the checker.
 A future merge queue needs its own event wiring before using this PR-only check.
+
+Changes to the root `LICENSE` or `NOTICE` require repository owner review.
+Propose legitimate updates by pull request and explain the reason. The owner
+is named in [.github/CODEOWNERS](.github/CODEOWNERS); GitHub enforces approval
+only when the target branch requires code-owner review.

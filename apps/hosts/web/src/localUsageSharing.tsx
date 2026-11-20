@@ -20,7 +20,7 @@ interface LocalUsageStatus {
   localRetentionDays: number;
   remoteRetentionDays: number | "indefinite" | null;
   remoteDeletion: "installation-authenticated";
-  canDeleteSharedData?: boolean;
+  hasUnrequestedEarlierWithdrawal?: boolean;
   installationId?: string | null;
   privacyHistory?: Array<{ id: string; kind: "consent_granted" | "sharing_stopped" | "deletion_requested" | "deletion_accepted" | "deletion_completed";
     at?: string; installationId?: string; notice?: string; requestId?: string; completionDueAt?: string; recovered?: boolean }>;
@@ -30,16 +30,21 @@ interface LocalUsageStatus {
 }
 
 const privacyTermsPath = "/settings/privacy/terms";
-const bundledNotice = { version: "2026-10-12-usage-only-query-expiry", localRetentionDays: 7 } as const;
+const archiveDisclosure = "When you stop sharing, we delete the original events. For journeys shared under the archive notice, we keep the month, ordered steps, operation pairings and relative timing indefinitely under a new random key. The archive has no installation ID or exact timestamps and cannot be deleted by installation ID.";
+function archiveCopy(status?: LocalUsageStatus) {
+  return status?.privacyNoticeVersion === "usage-with-withdrawal-archive-v1-disclosed" ? archiveDisclosure : null;
+}
+const bundledNotice = { version: "usage-only-withdrawal-v1", localRetentionDays: 7 } as const;
 
 export function LocalUsageSharingPrompt(props: LocalUsageProps) {
   const location = useLocation();
+  const [confirmEarlier, setConfirmEarlier] = useState(false);
   const { data: status } = useLocalUsageStatus(props);
   const saveChoice = useSaveLocalUsageChoice(props);
   const [error, setError] = useState<string>();
   const choose = async (choice: "yes" | "no" | "ask-later") => {
     setError(undefined);
-    try { await saveChoice(choice); }
+    try { await saveChoice(choice); setConfirmEarlier(false); }
     catch (caught) { setError(caught instanceof Error ? caught.message : String(caught)); }
   };
   const promptOpen = status?.promptEligible === true && location.pathname !== privacyTermsPath;
@@ -51,10 +56,13 @@ export function LocalUsageSharingPrompt(props: LocalUsageProps) {
       <p><strong>Our mission is to help developers go from idea to a running production workflow as fast as possible. Help us improve ArkiMux.</strong></p>
       <p className="text-sm text-muted-foreground">Share Local setup steps and session timing. Error reports stay local. No workflow content, prompts, results, credentials, or personal identity. Sharing is optional and does not affect Local features.</p>
       <p className="text-sm text-muted-foreground">Read the <Link className="underline underline-offset-4" to={privacyTermsPath}>Privacy Notice {status?.privacyNoticeVersion}</Link> before choosing. You can change your choice in Settings.</p>
+      {archiveCopy(status) && <p>{archiveCopy(status)}</p>}
       {error ? <ErrorNotification description={error} /> : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" onClick={() => void choose("ask-later")}>Ask later</Button>
-        <Button variant="outline" onClick={() => void choose("no")}>No</Button>
+        {confirmEarlier && status?.hasUnrequestedEarlierWithdrawal
+          ? <><p>Declining will also request deletion of the earlier installation’s linked usage.</p><Button variant="outline" onClick={() => setConfirmEarlier(false)}>Cancel</Button><Button onClick={() => void choose("no")}>Confirm deletion</Button></>
+          : <Button variant="outline" onClick={() => status?.hasUnrequestedEarlierWithdrawal ? setConfirmEarlier(true) : void choose("no")}>No</Button>}
         <Button onClick={() => void choose("yes")}>Yes</Button>
       </div>
     </DialogContent>
@@ -65,15 +73,22 @@ export function LocalPrivacySettings(props: LocalUsageProps) {
   const { data: status, error: statusError } = useLocalUsageStatus(props);
   const saveChoice = useSaveLocalUsageChoice(props);
   const [error, setError] = useState<string>();
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const action = status?.choice === "accepted" ? "stop" : status?.hasUnrequestedEarlierWithdrawal ? "earlier" : null;
+  const target = action && JSON.stringify([action,status?.choice,status?.installationId,status?.privacyNoticeVersion]);
+  const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
+  const confirmDelete = !!target && confirmTarget === target;
   const [deleting, setDeleting] = useState(false);
   const queryClient = useQueryClient();
   const deleteShared = async () => {
     setDeleting(true); setError(undefined);
     try {
-      const queryKey = statusQueryKey(props); await queryClient.cancelQueries({ queryKey });
-      const updated = await request(props, "POST", { confirm: true }, "/deletion");
-      queryClient.setQueryData(queryKey, updated); setConfirmDelete(false);
+      if (action === "stop" || status?.choice === "undecided") await saveChoice("no");
+      else if (action === "earlier") {
+        const queryKey = statusQueryKey(props); await queryClient.cancelQueries({ queryKey });
+        const updated = await request(props, "POST", { confirm: true }, "/deletion");
+        queryClient.setQueryData(queryKey, updated);
+      }
+      setConfirmTarget(null);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Deletion could not start."); }
     finally { setDeleting(false); }
   };
@@ -94,6 +109,7 @@ export function LocalPrivacySettings(props: LocalUsageProps) {
       <CardContent className="space-y-4">
         {!status ? <p>Loading…</p> : <>
           <p><strong>Current choice:</strong> {status.choice === "accepted" ? "Yes" : status.choice === "declined" ? "No" : "Not decided"}</p>
+          {!confirmDelete && status.choice !== "accepted" && archiveCopy(status) && <p>{archiveCopy(status)}</p>}
           <div className="flex flex-wrap items-center gap-2"><strong>Installation ID:</strong>
             {status.installationId ? <><code className="break-all select-text">{status.installationId}</code>
               <Button variant="ghost" size="icon" aria-label="Copy installation ID" title="Copy installation ID" onClick={() => void copyInstallationId()}><Copy aria-hidden="true" className="size-4" /></Button></>
@@ -103,13 +119,18 @@ export function LocalPrivacySettings(props: LocalUsageProps) {
           <p className="text-sm text-muted-foreground"><Link className="underline underline-offset-4" to={privacyTermsPath}>Read the Privacy Notice {status.privacyNoticeVersion}</Link> for the exact data, exclusions, retention, and deletion rules.</p>
           <p className="text-sm text-muted-foreground">Provider: ArkiMux Telemetry Service ({status.provider.configured ? "configured" : "not configured"}). Delivery: {deliveryLabel(status.deliveryState)}. Pending events for this project: {status.pendingEventCount}.</p>
           {status.credentialDeletionPending ? <p role="status">Sharing is stopped for the old identity. Unlock the OS credential store so Local can finish deleting its credential.</p> : null}
-          <div className="flex flex-wrap gap-2"><Button disabled={status.deletionRequest?.status === "pending"} onClick={() => void choose("yes")}>Share usage</Button><Button variant="outline" disabled={status.deletionRequest?.status === "pending"} onClick={() => void choose("no")}>Do not share</Button>
-            {status.canDeleteSharedData ? <Button variant="outline" onClick={() => setConfirmDelete(true)}>Delete shared data</Button> : null}</div>
+          {!(confirmDelete && action) && <div className="flex flex-wrap gap-2">
+            {status.choice !== "accepted" && <Button disabled={status.deletionRequest?.status === "pending"} onClick={() => void choose("yes")}>Share usage</Button>}
+            {status.choice === "undecided" && <Button variant="outline" onClick={() => action === "earlier" ? setConfirmTarget(target) : void choose("no")}>Do not share</Button>}
+            {action === "stop" && <Button variant="outline" onClick={() => setConfirmTarget(target)}>Stop sharing…</Button>}
+            {action === "earlier" && status.choice === "declined" && <Button variant="outline" onClick={() => setConfirmTarget(target)}>Delete earlier shared data…</Button>}
+          </div>}
           {status.deletionRequest?.status === "pending" ? <p role="status">Sharing has stopped. Local is waiting to submit your deletion request. Keep the service configuration and OS credential available; it will retry automatically. Delivery: {deliveryLabel(status.deliveryState)}.</p> : null}
-          {confirmDelete ? <div className="space-y-2 rounded border p-3">
-            <p>This stops sharing across your projects and requests deletion of this installation's source usage data within seven days. Existing query-result files are not deleted by this request; they expire automatically under the retention policy in the Privacy Notice. It does not delete your projects, workflow runs, or local diagnostics. A minimal deletion record remains to block old uploads. Do not share alone does not request remote deletion.</p>
-            <Button disabled={deleting} onClick={() => void deleteShared()}>Confirm delete shared data</Button>{" "}
-            <Button variant="outline" disabled={deleting} onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          {confirmDelete && action ? <div className="space-y-2 rounded border p-3">
+            <p>{action === "stop" ? "New uploads stop immediately. Any unsent events are discarded." : "Local will request deletion of data still linked to the earlier installation."} The service removes the original source usage data within seven days. Your workflows, runs and results are not deleted.</p>
+            {archiveCopy(status) && <p>{archiveCopy(status)}</p>}
+            <Button disabled={deleting} onClick={() => void deleteShared()}>{action === "stop" ? "Confirm stop sharing" : "Confirm deletion"}</Button>{" "}
+            <Button variant="outline" disabled={deleting} onClick={() => setConfirmTarget(null)}>Cancel</Button>
           </div> : null}
         </>}
         {error || statusError ? <ErrorNotification description={error ?? statusError?.message} /> : null}
@@ -146,7 +167,7 @@ export function LocalPrivacyTerms(props: LocalUsageProps) {
     <Card><CardContent className="space-y-5 pt-6">
       <section className="space-y-2"><h2 className="text-lg font-semibold">Your choice</h2>
         <p>Local usage sharing is off until you choose Yes or Share usage. One choice covers the allowed signals below across ArkiMux projects in this OS user account. No, Ask later, closing the prompt, and leaving the choice undecided send no usage events and change no Local capability. Ask later records no consent decision and can prompt again after a later Local server start.</p>
-        <p>After Yes, Local creates a random registration identity and registers an installation account with ArkiMux's dedicated AWS Cognito pool in the background. Its posting credential stays in the OS credential store, not project files or the browser. The resulting pseudonymous ID connects signals across projects; it is not a MAC address, hardware fingerprint or Managed identity. Choosing No removes local identity and queued data. If the credential store is locked, deletion is retried and shown in Settings.</p>
+        <p>After Yes, Local creates a random registration identity and registers an installation account with ArkiMux's dedicated AWS Cognito pool in the background. Its posting credential stays in the OS credential store, not project files or the browser. The resulting pseudonymous ID connects signals across projects; it is not a MAC address, hardware fingerprint or Managed identity. Choosing No stops collection and clears queued data. Local keeps the credential to request and confirm withdrawal. If the credential store is locked, deletion is retried and shown in Settings.</p>
       </section>
       <section className="space-y-2"><h2 className="text-lg font-semibold">What is shared</h2>
         <p>The recipient is the ArkiMux Telemetry Service hosted on AWS. The Local server sends consent granted, Local started, connection creation/testing, configuration saved, run started/succeeded/failed/cancelled, and result fetched events. A fetch means the API returned a result payload for a successful run; it does not prove human viewing. Browser and CLI clients count equally.</p>
@@ -162,9 +183,10 @@ export function LocalPrivacyTerms(props: LocalUsageProps) {
         <p>ArkiMux does not send workflow, provider, effect, or developer-input error content; unfiltered messages or stacks, source text, prompts, results, absolute machine paths, credentials, human identity, or Managed identity. Usage sharing is suppressed during CI, install, and postinstall. AWS necessarily processes network addresses for transport and security; IP is not an analytics field.</p>
       </section>
       <section className="space-y-2"><h2 className="text-lg font-semibold">Storage and deletion</h2>
+        <p>Accepting a new notice starts a fresh sharing identity. Local keeps the earlier credential in your OS credential store for deletion only. It does not use it to send usage, and choosing Yes does not withdraw the earlier installation.</p>
         <p>Each project's outbox holds at most 100 events for {status?.localRetentionDays ?? bundledNotice.localRetentionDays} days under the shared OS-user telemetry directory. Retries use stable event IDs. Delivery is not guaranteed. Choosing No stops new uploads and clears pending events; an in-flight request cannot be recalled. Deleting a Cognito account does not delete uploaded data.</p>
         <p>Privacy history is saved locally in this OS user account, including consent choices, known installation IDs and deletion receipts. It is not uploaded. Stopping sharing or deleting shared data keeps this local history so earlier choices and requests remain visible.</p>
-        <p>Delete shared data is a separate authenticated action. Use it before choosing No, which removes the credential needed to prove ownership. It stops sharing immediately, retains the credential only while submitting the request, and then removes it locally. Offline requests remain pending, not accepted. The service deletes the installation's source data and catalog entries within seven days. Existing query-result files may still contain that data and are not deleted by this request. They become eligible for automatic expiration {status?.privacy?.queryRetentionDays ?? 7} days after each file is created, rounded up to the next midnight UTC; AWS removal is asynchronous and may take longer. In-flight queries are not cancelled and their result files expire on the same basis. Queue and dead-letter copies retain at most seven days and cannot restore deleted source data. Minimal request and suppression records remain to reject old uploads; these are not analytics. Previously downloaded reports cannot be recalled.</p>
+        <p>Stopping sharing requests authenticated withdrawal. If an earlier installation still has linked usage, you can request its deletion from Privacy settings. Local retries offline without renewed consent and retains the credential until removal is confirmed. Acceptance is not confirmation of removal. {archiveCopy(status) ?? "No real usage rows are currently approved for archive retention."} The service deletes the installation's source data and catalog entries within seven days. Existing query-result files may still contain that data and are not deleted by this request. They become eligible for automatic expiration {status?.privacy?.queryRetentionDays ?? 7} days after each file is created, rounded up to the next midnight UTC; AWS removal is asynchronous and may take longer. In-flight queries are not cancelled and their result files expire on the same basis. Queue and dead-letter copies retain at most seven days and cannot restore deleted source data. Minimal request and suppression records remain to reject old uploads; these are not analytics. Previously downloaded reports cannot be recalled.</p>
         {status?.privacy ? <p>Configured retention: usage {status.privacy.usageRetentionDays === "indefinite" ? "has no automatic expiry" : `${status.privacy.usageRetentionDays} days`}, query results {status.privacy.queryRetentionDays} days, security/service logs {status.privacy.logRetentionDays} days. Deletion: {status.privacy.deletionDescription}</p>
           : <p>The AWS recipient's retention and deletion policy is not configured. No telemetry can be uploaded until an approved service configuration is supplied and you consent to its notice.</p>}
       </section>

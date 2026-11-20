@@ -6,8 +6,8 @@ Requires Node.js 24 or newer. Run `npm ci`, `npm run typecheck`, `npm run build`
 
 Managed hosting and its cloud deployment services are separate. Original errors remain local; usage sharing is optional. See `docs/error-diagnostics.md`.
 
-## Source review branch
+## Source status
 
-This is the initial source migration on `codex/repository-split`, not a tagged or accepted product release. npm publication, final release checks and qualified legal review remain pending.
+The public Local source is maintained on `main`; this is not a tagged or accepted product release. npm publication and final release checks remain pending. The [Local rights and responsibility documents](docs/legal/README.md) are drafts for owner review; whether to obtain external legal review is a separate decision.
 
 ArkiMux-authored source is licensed under [Apache-2.0](LICENSE), unless stated otherwise. Third-party components retain their own terms; see [notices](NOTICE), [dependency notices](THIRD_PARTY_NOTICES.md) and [generated project rights](GENERATED_PROJECTS.md).

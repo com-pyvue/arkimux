@@ -83,6 +83,14 @@ export function createAgentExecutionApiHost(options: AgentExecutionApiHostOption
       if (!value || !["yes", "no", "ask-later"].includes(String(value.choice))) {
         return context.json({ error: { code: "invalid-request", message: "Choose Yes, No, or Ask later." } }, 400);
       }
+      if (value.choice === "no") {
+        // Withdrawal can now remove remote data. Apply the explicit deletion route's protections.
+        const origin = context.req.header("origin");
+        if (origin && !originAllowed(origin)) return context.json({ error: { message: "This origin is not allowed." } }, 403);
+        const auth = options.localUsageTelemetry!.authorizeDeletion;
+        if (!auth) return context.json({ error: { message: "Withdrawal is unavailable." } }, 403);
+        try { await auth(context.req.raw); } catch { return context.json({error:{message:"A Local session is required."}},401); }
+      }
       return context.json(await options.localUsageTelemetry!.choose(value.choice as "yes" | "no" | "ask-later"));
     });
   }
