@@ -11,12 +11,20 @@ const read = file => readFile(new URL(file, root), "utf8");
 test("Local responsibility drafts are clearly marked and their local links resolve", async () => {
   for (const file of docs) {
     const text = await read(file);
-    assert.match(text, file === "CONTRIBUTING.md" ? /Contribution policy adopted/ : /Draft (?:for|proposal for) owner review/, file);
+    if (file === "CONTRIBUTING.md") assert.match(text, /Contribution policy adopted/, file);
+    else if (file !== "SECURITY.md") assert.match(text, /Draft (?:for|proposal for) owner review/, file);
     assert.doesNotMatch(text, /\/Users\/|arkimux-platform|roadmap\/|ACCEPT-\d/, file);
     for (const [, target] of text.matchAll(/\]\(([^)]+)\)/g)) {
       if (/^https?:\/\//.test(target) || target.startsWith("#")) continue;
       await readFile(new URL(target.split("#")[0], new URL(file, root)));
     }
+  }
+});
+
+test("security and contributor instructions link directly to private vulnerability reporting", async () => {
+  const form = "https://github.com/com-pyvue/arkimux/security/advisories/new";
+  for (const file of ["SECURITY.md", "CONTRIBUTING.md"]) {
+    assert.ok((await read(file)).includes(`](${form})`), file);
   }
 });
 

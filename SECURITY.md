@@ -1,8 +1,8 @@
 # Security reporting
 
-Draft for owner review, prepared 5 November 2026. A private reporting route and
-the first supported release must be confirmed before public release. No private
-mailbox or GitHub advisory setting is claimed to be active by this draft.
+[Report a vulnerability privately on GitHub](https://github.com/com-pyvue/arkimux/security/advisories/new).
+Sign in and use this form to reach ArkiMux maintainers. Submitting a report
+does not create a public issue. There is no promised response time or bounty.
 
 ## Report safely
 
@@ -11,11 +11,6 @@ issue. Prepare a minimal report describing the affected version, impact, require
 access, safe reproduction steps and any suggested mitigation. Redact supporting
 diagnostics. Do not test against other people's installations, accounts or data
 without their permission.
-
-Once the owner confirms a private security contact or enables GitHub private
-vulnerability reporting, use that route for confidential details. Until then,
-contact the repository owner without disclosing the sensitive details publicly
-and ask for a private channel. There is no response-time or bounty promise.
 
 ## Current Local limits
 

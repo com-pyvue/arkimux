@@ -16,9 +16,9 @@ separate authorization.
 Use documented public package imports for workflow examples. Preserve existing
 workflow/runtime contracts and explain any intentional compatibility change.
 Contributions are reviewed; submission does not guarantee acceptance or a
-maintenance commitment. Read [SECURITY.md](SECURITY.md) for safe reporting. Its
-private reporting route still needs confirmation. Do not disclose vulnerabilities
-in public issues.
+maintenance commitment. For suspected vulnerabilities, use the
+[private reporting form](https://github.com/com-pyvue/arkimux/security/advisories/new)
+and follow [SECURITY.md](SECURITY.md). Do not disclose vulnerabilities in public issues.
 
 ## Licence and certification
 
