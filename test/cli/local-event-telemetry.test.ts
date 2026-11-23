@@ -33,6 +33,22 @@ async function fixture() {
     read: () => state.update(s => structuredClone(s)) };
 }
 
+describe("usage event privacy contract", () => {
+  it.each([1, 2] as const)("rejects private fields in v%i usage events", version => {
+    const event = {
+      schema_version: version, event_id: randomUUID(), installation_id: randomUUID(),
+      ...(version === 1 ? { consent_journey_id: randomUUID() } : {}),
+      kind: "arkimux.event.local.start", arkimux_version: "0.1.0",
+      event_time: "2026-09-30T00:00:00.000Z", send_time: "2026-09-30T00:00:01.000Z",
+    };
+    expect(parseVersionedUsageBatch({ events: [event] }, config)).toEqual([event]);
+    for (const field of ["message", "stack", "prompt", "payload", "user_id"]) {
+      const batch = { events: [{ ...event, [field]: "synthetic private value" }] };
+      expect(() => parseVersionedUsageBatch(batch, config), `v${version} must reject ${field}`).toThrow();
+    }
+  });
+});
+
 describe("event-first Local sender", () => {
   it("expires across projects at the cutoff, without a fake withdrawal or a new grant on return", async () => {
     const f = await fixture(), day = 86_400_000;
