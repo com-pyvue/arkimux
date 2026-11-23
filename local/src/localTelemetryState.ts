@@ -4,14 +4,14 @@ import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { usageEventSchema, uuid, installationId, deletionReceiptSchema } from "@com-pyvue/arkimux-telemetry-contracts";
+import { versionedUsageEventSchema, uuid, installationId, deletionReceiptSchema, inactivityMs } from "@com-pyvue/arkimux-telemetry-contracts";
 
 export const TELEMETRY_TTL = 7 * 86400_000;
 const decision = z.strictObject({ choice: z.enum(["accepted", "declined"]), notice: z.string(),
-  target: z.string(), recipient: z.string().optional(), at: z.string().datetime(), epoch: uuid });
-const queued = z.strictObject({ project: z.string(), event: usageEventSchema });
+  target: z.string(), recipient: z.string().optional(), at: z.string().datetime(), epoch: uuid, lastActivity: z.string().datetime().optional() });
+const queued = z.strictObject({ project: z.string(), event: versionedUsageEventSchema });
 const privacyHistoryEntry = z.strictObject({ id: uuid, epoch: uuid,
-  kind: z.enum(["consent_granted", "sharing_stopped", "deletion_requested", "deletion_accepted", "deletion_completed"]),
+  kind: z.enum(["consent_granted", "consent_expired", "sharing_stopped", "deletion_requested", "deletion_accepted", "deletion_completed"]),
   at: z.string().datetime().optional(), installationId: installationId.optional(), notice: z.string().optional(),
   requestId: uuid.optional(), completionDueAt: z.string().datetime().optional(),
   recovered: z.boolean().optional() });
@@ -65,6 +65,17 @@ function recoverPrivacyHistory(state: TelemetryState) {
 export function emptyTelemetryState(): TelemetryState {
   return { version: 1, pendingDeletes: [], outbox: [], operations: {}, runs: {}, early: {}, delivery: "disabled", retryAt: 0, attempts: 0 };
 }
+export function expireConsent(s: TelemetryState, at: number) {
+  const c = s.consent;
+  if (!c || c.choice !== "accepted") return;
+  recordPrivacyHistory(s, {epoch:c.epoch, kind:"consent_expired", at:new Date(at).toISOString(), notice:c.notice, installationId:s.identity?.sub});
+  if (s.identity?.sub && s.identity.credentialCreated) {
+    (s.confirmations ??= []).push({epoch:c.epoch, registrationId:s.identity.registrationId,
+      installationId:s.identity.sub, target:c.target, recipient:c.recipient, retryAt:0});
+  } else if (s.identity && !s.pendingDeletes.includes(c.epoch)) s.pendingDeletes.push(c.epoch);
+  delete s.consent; delete s.identity; delete s.lease;
+  s.outbox=[]; s.runs={}; s.operations={}; s.early={}; s.retryAt=0; s.attempts=0; s.delivery="disabled";
+}
 export function telemetryRoot(): string {
   if (process.platform === "darwin") return path.join(os.homedir(), "Library/Application Support/ArkiMux/telemetry");
   if (process.platform === "win32") return path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData/Local"), "ArkiMux/telemetry");
@@ -91,6 +102,10 @@ export class TelemetryStateStore {
           && "kind" in item.event && item.event.kind === "arkimux.error.framework"));
       const state = saved === undefined ? emptyTelemetryState() : telemetryStateSchema.parse(saved);
       recoverPrivacyHistory(state);
+      if (state.consent?.choice === "accepted" && state.consent.lastActivity) {
+        const deadline = Date.parse(state.consent.lastActivity) + inactivityMs;
+        if (this.now() >= deadline) expireConsent(state, deadline);
+      }
       const oldest = this.now() - TELEMETRY_TTL;
       state.outbox = state.outbox.filter(item => Date.parse(item.event.event_time) >= oldest);
       for (const collection of [state.operations, state.runs, state.early]) {

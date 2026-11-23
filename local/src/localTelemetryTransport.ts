@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { registrationSchema, parseUsageBatch, installationId, deletionReceiptSchema, type DeletionReceipt, type UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
+import { registrationSchema, parseVersionedUsageBatch, installationId, deletionReceiptSchema, type DeletionReceipt, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
 
 export const senderConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -22,7 +22,7 @@ export interface SecretStore {
   delete(key: string): Promise<void>;
 }
 export class TelemetryTransportError extends Error {
-  constructor(readonly kind: "retry" | "rejected" | "invalid" | "unauthorized", readonly retryAfterMs?: number) { super(kind); }
+  constructor(readonly kind: "retry" | "rejected" | "invalid" | "unauthorized" | "expired", readonly retryAfterMs?: number) { super(kind); }
 }
 export interface TelemetryTransport {
   register(registrationId: string, secret: string, signal: AbortSignal): Promise<string>;
@@ -103,7 +103,7 @@ export function createTelemetryTransport(config: SenderConfig, fetcher: typeof f
       }
     },
     async send(events, accessToken, signal) {
-      try { parseUsageBatch({ events }, { maxBodyBytes: config.maxBodyBytes, maxBatchEvents: config.maxBatchEvents }); }
+      try { parseVersionedUsageBatch({ events }, { maxBodyBytes: config.maxBodyBytes, maxBatchEvents: config.maxBatchEvents }); }
       catch { throw new TelemetryTransportError("invalid"); }
       const { response, value } = await request(`${base}v1/events`, { events },
         { "content-type": "application/json", authorization: `Bearer ${accessToken}`,
@@ -111,6 +111,7 @@ export function createTelemetryTransport(config: SenderConfig, fetcher: typeof f
             ? { "x-arkimux-consent-notice": archiveNotice } : {}) }, signal);
       if (response.status === 401) throw new TelemetryTransportError("unauthorized");
       if (response.status === 403) throw new TelemetryTransportError("rejected");
+      if (response.status === 410 && value?.error === "consent_expired") throw new TelemetryTransportError("expired");
       if ([400, 410, 413, 422].includes(response.status)) throw new TelemetryTransportError("invalid");
       if (response.status !== 202) throw new TelemetryTransportError("retry");
       const ids = value.accepted_event_ids;

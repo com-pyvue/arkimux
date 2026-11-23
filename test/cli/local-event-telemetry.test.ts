@@ -7,12 +7,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocalEventTelemetry } from "../../local/src/localEventTelemetry.ts";
 import { TelemetryStateStore, TELEMETRY_TTL } from "../../local/src/localTelemetryState.ts";
 import { createTelemetryTransport, TelemetryTransportError, type InstallationCredential, type SenderConfig } from "../../local/src/localTelemetryTransport.ts";
-import { type UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
+import { parseVersionedUsageBatch, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
 
 const roots: string[] = [];
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
 const config: SenderConfig = { schemaVersion: 1, baseUrl: "https://collector.example/collect/", userPoolId: "us-east-1_fixture", clientId: "fixtureclient",
-  privacy: { noticeVersion: "test-aws-result-fetch", usageRetentionDays: 90, queryRetentionDays: 7,
+  privacy: { noticeVersion: "installation-retention-180d-v1", usageRetentionDays: 90, queryRetentionDays: 7,
     logRetentionDays: 7, deletionDescription: "Synthetic fixture policy, not approved production settings." }, maxBatchEvents: 25, maxBodyBytes: 32768 };
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "arkimux-event-sender-")); roots.push(root);
@@ -34,6 +34,37 @@ async function fixture() {
 }
 
 describe("event-first Local sender", () => {
+  it("expires across projects at the cutoff, without a fake withdrawal or a new grant on return", async () => {
+    const f = await fixture(), day = 86_400_000;
+    const options = {...f.options,config:{...config,privacy:{...config.privacy,noticeVersion:"installation-retention-180d-v1"}}};
+    const a = new LocalEventTelemetry(options);
+    await a.choose("yes"); await a.flush(); f.advance(179*day);
+    for (const action of ["connection_created","configuration_saved"] as const) await a.finish((await a.begin(action))!, false);
+    await a.flush(); expect(f.sent.flat().slice(-2).map(e=>e.kind)).toEqual(["arkimux.event.connection.create.error","arkimux.event.configuration.save.error"]);
+    f.advance(180*day-1); await a.start(); expect((await a.status()).sharingEnabled).toBe(true); f.advance(1);
+    const b = new LocalEventTelemetry({...options,projectRoot:"another-project"});
+    expect(await b.begin("connection_tested")).toBeUndefined();
+    expect(await b.status()).toMatchObject({choice:"undecided", consentExpired:true, installationId:null, promptEligible:true,pendingEventCount:0});
+    expect((await b.status()).privacyHistory.map(e=>e.kind)).toEqual(["consent_expired","consent_granted"]);
+    await b.choose("ask-later"); expect((await b.status()).sharingEnabled).toBe(false);
+    f.transport.register.mockResolvedValueOnce(randomUUID()); await b.choose("yes"); await b.flush();
+    expect((await b.status()).installationId).not.toBe(f.sub);
+    expect(f.sent.flat().filter(e=>e.kind==="arkimux.event.consent.success")).toHaveLength(2);
+  });
+  it("starts F5 with a fresh Yes and never imports an earlier recipient's outbox", async () => {
+    const f = await fixture();
+    const previous = new LocalEventTelemetry({...f.options, config:{...config, baseUrl:"https://old.example/",
+      privacy:{...config.privacy,noticeVersion:"old-notice"}}});
+    await previous.choose("yes"); await previous.start();
+    expect((await f.sender.status()).sharingEnabled).toBe(false);
+    await f.sender.flush(); expect(f.sent).toEqual([]);
+    await f.sender.choose("yes"); await f.sender.flush();
+    const events = f.sent.flat();
+    expect(events.map(e=>e.kind)).toEqual(["arkimux.event.consent.success"]);
+    expect(events[0].schema_version).toBe(2); expect(events[0]).not.toHaveProperty("consent_journey_id");
+    expect(parseVersionedUsageBatch({events}, config)).toEqual(events);
+    expect(() => parseVersionedUsageBatch({events:[{...events[0],consent_journey_id:randomUUID()}]}, config)).toThrow();
+  });
   it("does not carry earlier Yes or queued events into the withdrawal archive notice",async()=>{
     const f=await fixture();
     await f.sender.choose("yes");
@@ -107,14 +138,14 @@ describe("event-first Local sender", () => {
     const f = await fixture(); await f.sender.choose("yes");
     await f.state.update(s => { s.consent!.notice = `${config.privacy.noticeVersion}-framework-stacks-v1`; });
     expect(await f.sender.status()).toMatchObject({ choice: "undecided", sharingEnabled: false,
-      privacyNoticeVersion: `${config.privacy.noticeVersion}-usage-only-v1-query-expiry-v1-withdrawal-v1` });
+      privacyNoticeVersion: config.privacy.noticeVersion });
     await f.sender.flush(); expect(f.transport.register).not.toHaveBeenCalled(); expect(f.sent).toEqual([]);
     await f.sender.choose("yes"); await f.sender.flush();
     expect(f.sent.flat().map(event => event.kind)).toEqual(["arkimux.event.consent.success"]);
   });
   it("requires a new choice when older consent did not cover the current retention terms", async () => {
     const f = await fixture(); await f.sender.choose("yes");
-    await f.state.update(s => { s.consent!.notice = config.privacy.noticeVersion; });
+    await f.state.update(s => { s.consent!.notice = "usage-with-withdrawal-archive-v1-disclosed"; });
     expect(await f.sender.status()).toMatchObject({ choice: "undecided", sharingEnabled: false });
     await f.sender.flush(); expect(f.transport.register).not.toHaveBeenCalled(); expect(f.sent).toEqual([]);
     await f.sender.choose("yes"); await f.sender.flush();
@@ -240,7 +271,8 @@ describe("event-first Local sender", () => {
     await reader.fetched("private-run-name"); await reader.fetched("private-run-name"); await reader.flush();
     const events = f.sent.flat();
     expect(events.map(e => e.kind)).toEqual(["arkimux.event.consent.success", "arkimux.event.run.start", "arkimux.event.run.success", "arkimux.event.run_result.fetch.success"]);
-    expect(new Set(events.map(e => e.consent_journey_id)).size).toBe(1);
+    expect(events.every(e => e.schema_version === 2 && !("consent_journey_id" in e))).toBe(true);
+    expect(new Set(events.map(e => e.installation_id))).toEqual(new Set([f.sub]));
     expect(JSON.stringify(events)).not.toContain("private-run-name");
   });
   it("shares one consent and credential across projects and serializes concurrent flushes", async () => {
@@ -470,6 +502,12 @@ describe("event-first Local sender", () => {
 });
 
 describe("Cognito HTTP transport", () => {
+  it("distinguishes authenticated expiry from generic HTTP rejection",async()=>{
+    for(const [status,error,kind] of [[410,"consent_expired","expired"],[410,"gone","invalid"],[403,"forbidden","rejected"]] as const) {
+      const transport=createTelemetryTransport(config,async()=>Response.json({error},{status}));
+      await expect(transport.send([transportUsage()],"access",new AbortController().signal)).rejects.toMatchObject({kind});
+    }
+  });
   it("attests the archive notice only on a consent upload from the new configuration", async()=>{
     for(const [notice,kind,shouldMark] of [["old","arkimux.event.consent.success",false],
       ["usage-with-withdrawal-archive-v1","arkimux.event.local.start",false],
