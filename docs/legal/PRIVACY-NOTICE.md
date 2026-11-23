@@ -66,6 +66,7 @@ and successful result fetches count. Failed attempts send a code, not error
 text. This format does not send a journey ID. The old installation ID cannot
 resume sharing; returning requires a fresh Yes and a new, unlinked installation
 ID. This notice does not authorize keeping an archive of those events.
+The separate **dev-sandbox-archive-v1** notice is for an explicitly designated dev walkthrough, not production. A fresh Yes authorizes retaining coded usage after withdrawal or five inactive minutes. The original rows are deleted. The archive keeps the cohort month, ordered steps, operation pairings and relative times under one random key, without original IDs or exact timestamps. It has no automatic expiry and cannot be deleted by installation ID. Prior consent does not opt you in.
 The earlier configuration below does not describe that inactivity rule.
 
 | Data | Current handling |

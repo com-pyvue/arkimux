@@ -52,7 +52,16 @@ export const usageEventV2Schema = usageFields.omit({ consent_journey_id: true })
 export const versionedUsageEventSchema = z.discriminatedUnion("schema_version", [usageEventSchema, usageEventV2Schema]);
 export type VersionedUsageEvent = z.infer<typeof versionedUsageEventSchema>;
 export const inactivityMs = 180 * 86_400_000;
+export const inactivityExpirySecondsSchema = z.number().int().min(1).max(inactivityMs / 1000);
+export const registrationResponseSchema = z.object({
+  installation_id: installationId, client_id: z.string().min(1), user_pool_id: z.string().min(1),
+  inactivity_expiry_seconds: inactivityExpirySecondsSchema,
+});
 export const installationRetentionNotice = "installation-retention-180d-v1";
+export const sandboxArchiveNotice = "dev-sandbox-archive-v1";
+export function usesInstallationRetention(notice: string | undefined) {
+  return notice === installationRetentionNotice || notice === sandboxArchiveNotice;
+}
 export function qualifiesAsActivity(kind: VersionedUsageEvent["kind"]): boolean {
   return kind.startsWith("arkimux.event.connection.") || kind.startsWith("arkimux.event.configuration.save.")
     || kind === "arkimux.event.run.start" || kind === "arkimux.event.run_result.fetch.success";

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { registrationSchema, parseVersionedUsageBatch, installationId, deletionReceiptSchema, type DeletionReceipt, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
+import { usesInstallationRetention, sandboxArchiveNotice, registrationResponseSchema, registrationSchema, parseVersionedUsageBatch, installationId, deletionReceiptSchema, type DeletionReceipt, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
 
 export const senderConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -25,7 +25,7 @@ export class TelemetryTransportError extends Error {
   constructor(readonly kind: "retry" | "rejected" | "invalid" | "unauthorized" | "expired", readonly retryAfterMs?: number) { super(kind); }
 }
 export interface TelemetryTransport {
-  register(registrationId: string, secret: string, signal: AbortSignal): Promise<string>;
+  register(registrationId: string, secret: string, signal: AbortSignal): Promise<{ sub: string; inactivityExpirySeconds?: number }>;
   authenticate(registrationId: string, credential: InstallationCredential, signal: AbortSignal): Promise<{ accessToken: string; expiresIn: number; refreshToken?: string }>;
   send(events: UsageEvent[], accessToken: string, signal: AbortSignal): Promise<void>;
   requestDeletion?(accessToken: string, signal: AbortSignal): Promise<DeletionReceipt>;
@@ -75,7 +75,10 @@ export function createTelemetryTransport(config: SenderConfig, fetcher: typeof f
       if ([401, 403].includes(response.status)) throw new TelemetryTransportError("rejected");
       if (!response.ok) throw new TelemetryTransportError("invalid");
       if (value.user_pool_id !== config.userPoolId || value.client_id !== config.clientId) throw new TelemetryTransportError("rejected");
-      return installationId.parse(value.installation_id);
+      if (!usesInstallationRetention(config.privacy.noticeVersion)) return { sub: installationId.parse(value.installation_id) };
+      const policy = registrationResponseSchema.safeParse(value);
+      if (!policy.success || (config.privacy.noticeVersion === sandboxArchiveNotice && policy.data.inactivity_expiry_seconds !== 300)) throw new TelemetryTransportError("retry");
+      return { sub: policy.data.installation_id, inactivityExpirySeconds: policy.data.inactivity_expiry_seconds };
     },
     async authenticate(registrationId, credential, signal) {
       let useRefreshToken = !!credential.refreshToken;
@@ -107,8 +110,8 @@ export function createTelemetryTransport(config: SenderConfig, fetcher: typeof f
       catch { throw new TelemetryTransportError("invalid"); }
       const { response, value } = await request(`${base}v1/events`, { events },
         { "content-type": "application/json", authorization: `Bearer ${accessToken}`,
-          ...(config.privacy.noticeVersion === archiveNotice && events.some(e=>e.kind==="arkimux.event.consent.success")
-            ? { "x-arkimux-consent-notice": archiveNotice } : {}) }, signal);
+          ...((config.privacy.noticeVersion === archiveNotice || config.privacy.noticeVersion === sandboxArchiveNotice) && events.some(e=>e.kind==="arkimux.event.consent.success")
+            ? { "x-arkimux-consent-notice": config.privacy.noticeVersion } : {}) }, signal);
       if (response.status === 401) throw new TelemetryTransportError("unauthorized");
       if (response.status === 403) throw new TelemetryTransportError("rejected");
       if (response.status === 410 && value?.error === "consent_expired") throw new TelemetryTransportError("expired");

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import path from "node:path";
-import { installationRetentionNotice, qualifiesAsActivity, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
+import { usesInstallationRetention, inactivityExpirySecondsSchema, qualifiesAsActivity, type VersionedUsageEvent as UsageEvent } from "@com-pyvue/arkimux-telemetry-contracts";
 import { TelemetryStateStore, telemetryRoot, recordPrivacyHistory, expireConsent, type TelemetryState } from "./localTelemetryState.ts";
 import { archiveNotice, createOsTelemetrySecretStore, createTelemetryTransport, senderConfigSchema, TelemetryTransportError,
   type SenderConfig, type SecretStore, type TelemetryTransport } from "./localTelemetryTransport.ts";
@@ -47,7 +47,7 @@ export class LocalEventTelemetry {
     this.#secrets = options.secrets ?? createOsTelemetrySecretStore();
     this.#project = hash(path.resolve(options.projectRoot));
     // A new usage-only notice requires a fresh choice. Saved history is retained.
-    this.#notice = this.#config?.privacy.noticeVersion === installationRetentionNotice ? installationRetentionNotice
+    this.#notice = usesInstallationRetention(this.#config?.privacy.noticeVersion) ? this.#config!.privacy.noticeVersion
       : this.#config?.privacy.noticeVersion === archiveNotice ? `${archiveNotice}-disclosed`
       : this.#config ? `${this.#config.privacy.noticeVersion}-usage-only-v1-query-expiry-v1-withdrawal-v1` : NOTICE;
     this.#target = this.#config ? hash(JSON.stringify([this.#config.baseUrl, this.#config.userPoolId, this.#config.clientId, this.#config.privacy])) : "unconfigured";
@@ -132,7 +132,7 @@ export class LocalEventTelemetry {
       s.consent = { choice: choice === "yes" ? "accepted" : "declined", notice: this.#notice, target: this.#target, recipient:this.#recipient,
         at: new Date(this.#now()).toISOString(), epoch: randomUUID() };
       s.delivery = choice === "yes" ? "registration-pending" : "disabled";
-      if (choice === "yes" && this.#notice === installationRetentionNotice) s.consent.lastActivity = s.consent.at;
+      if (choice === "yes" && usesInstallationRetention(this.#notice)) s.consent.lastActivity = s.consent.at;
       recordPrivacyHistory(s, { epoch: s.consent.epoch, kind: choice === "yes" ? "consent_granted" : "sharing_stopped",
         at: s.consent.at, notice: s.consent.notice, ...(choice === "no" ? { installationId: previousInstallationId } : {}) });
       if (choice === "yes" && !this.#suppressed()) {
@@ -201,7 +201,7 @@ export class LocalEventTelemetry {
       send_time: new Date(this.#now()).toISOString(), kind, arkimux_version: this.options.arkimuxVersion,
       ...(operation ? { operation_id: operation } : {}) };
     if (consent.lastActivity && qualifiesAsActivity(kind) && fields.event_time > consent.lastActivity && Date.parse(fields.event_time) <= this.#now()) consent.lastActivity = fields.event_time;
-    if (this.#notice === installationRetentionNotice) {
+    if (usesInstallationRetention(this.#notice)) {
       this.#queue(s, { ...fields, schema_version:2 });
     } else if (kind !== "arkimux.event.connection.create.error" && kind !== "arkimux.event.configuration.save.error") {
       this.#queue(s, { ...fields, kind, schema_version:1, consent_journey_id:consent.epoch });
@@ -228,7 +228,7 @@ export class LocalEventTelemetry {
       if (action.kind === "connection_tested") this.#enqueue(s, succeeded ? "arkimux.event.connection.test.success" : "arkimux.event.connection.test.error", operation);
       if (action.kind === "connection_created" && succeeded) this.#enqueue(s, "arkimux.event.connection.create.success", operation);
       if (action.kind === "configuration_saved" && succeeded) this.#enqueue(s, "arkimux.event.configuration.save.success", operation);
-      if (!succeeded && this.#notice === installationRetentionNotice) {
+      if (!succeeded && usesInstallationRetention(this.#notice)) {
         if (action.kind === "connection_created") this.#enqueue(s, "arkimux.event.connection.create.error", operation);
         if (action.kind === "configuration_saved") this.#enqueue(s, "arkimux.event.configuration.save.error", operation);
       }
@@ -362,11 +362,17 @@ export class LocalEventTelemetry {
       if (!await current()) { await this.#deleteUnusedCredential(epoch!); return; }
       await this.#store.update(s => { if (isCurrent(s) && s.identity) s.identity.credentialCreated = true; });
       let sub = snapshot.identity.sub;
-      if (!sub) {
-        sub = await this.#transport.register(snapshot.identity.registrationId, credential.secret, signal);
+      const needsPolicy = usesInstallationRetention(this.#notice);
+      if (!sub || (needsPolicy && !snapshot.consent?.inactivityExpirySeconds)) {
+        const registration = await this.#transport.register(snapshot.identity.registrationId, credential.secret, signal);
+        if (sub && sub !== registration.sub) throw new TelemetryTransportError("rejected");
+        const policy = inactivityExpirySecondsSchema.safeParse(registration.inactivityExpirySeconds);
+        if (needsPolicy && !policy.success) throw new TelemetryTransportError("retry");
+        sub = registration.sub;
         if (!await current()) return;
         await this.#store.update(s => { if (isCurrent(s) && s.identity) {
           s.identity.sub = sub;
+          if (s.consent && needsPolicy && policy.success) s.consent.inactivityExpirySeconds = policy.data;
           for (const entry of s.privacyHistory ?? []) if (entry.epoch === epoch && !entry.installationId) entry.installationId = sub;
           for (const item of s.outbox) item.event.installation_id = sub!;
         } });

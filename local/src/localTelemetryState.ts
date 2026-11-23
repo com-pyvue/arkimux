@@ -4,11 +4,11 @@ import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { versionedUsageEventSchema, uuid, installationId, deletionReceiptSchema, inactivityMs } from "@com-pyvue/arkimux-telemetry-contracts";
+import { versionedUsageEventSchema, uuid, installationId, deletionReceiptSchema, inactivityExpirySecondsSchema } from "@com-pyvue/arkimux-telemetry-contracts";
 
 export const TELEMETRY_TTL = 7 * 86400_000;
 const decision = z.strictObject({ choice: z.enum(["accepted", "declined"]), notice: z.string(),
-  target: z.string(), recipient: z.string().optional(), at: z.string().datetime(), epoch: uuid, lastActivity: z.string().datetime().optional() });
+  target: z.string(), recipient: z.string().optional(), at: z.string().datetime(), epoch: uuid, lastActivity: z.string().datetime().optional(), inactivityExpirySeconds: inactivityExpirySecondsSchema.optional() });
 const queued = z.strictObject({ project: z.string(), event: versionedUsageEventSchema });
 const privacyHistoryEntry = z.strictObject({ id: uuid, epoch: uuid,
   kind: z.enum(["consent_granted", "consent_expired", "sharing_stopped", "deletion_requested", "deletion_accepted", "deletion_completed"]),
@@ -102,8 +102,8 @@ export class TelemetryStateStore {
           && "kind" in item.event && item.event.kind === "arkimux.error.framework"));
       const state = saved === undefined ? emptyTelemetryState() : telemetryStateSchema.parse(saved);
       recoverPrivacyHistory(state);
-      if (state.consent?.choice === "accepted" && state.consent.lastActivity) {
-        const deadline = Date.parse(state.consent.lastActivity) + inactivityMs;
+      if (state.consent?.choice === "accepted" && state.consent.lastActivity && state.consent.inactivityExpirySeconds) {
+        const deadline = Date.parse(state.consent.lastActivity) + state.consent.inactivityExpirySeconds * 1000;
         if (this.now() >= deadline) expireConsent(state, deadline);
       }
       const oldest = this.now() - TELEMETRY_TTL;

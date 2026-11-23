@@ -14,6 +14,7 @@ afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, {
 const config: SenderConfig = { schemaVersion: 1, baseUrl: "https://collector.example/collect/", userPoolId: "us-east-1_fixture", clientId: "fixtureclient",
   privacy: { noticeVersion: "installation-retention-180d-v1", usageRetentionDays: 90, queryRetentionDays: 7,
     logRetentionDays: 7, deletionDescription: "Synthetic fixture policy, not approved production settings." }, maxBatchEvents: 25, maxBodyBytes: 32768 };
+const registration = (sub: string, inactivityExpirySeconds = 180 * 86400) => ({ sub, inactivityExpirySeconds });
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "arkimux-event-sender-")); roots.push(root);
   let now = Date.parse("2026-09-30T00:00:00.000Z");
@@ -21,7 +22,7 @@ async function fixture() {
   const vault = { get: vi.fn(async (key: string) => secrets.get(key)),
     set: vi.fn(async (key: string, value: InstallationCredential) => { secrets.set(key, value); }),
     delete: vi.fn(async (key: string) => { secrets.delete(key); }) };
-  const transport = { register: vi.fn(async (_id: string, _secret: string, _signal: AbortSignal) => sub), authenticate: vi.fn(async (_id: string, _credential: InstallationCredential, _signal: AbortSignal) => ({ accessToken: "ACCESS_SECRET", expiresIn: 300, refreshToken: "REFRESH_SECRET" })),
+  const transport = { register: vi.fn(async (_id: string, _secret: string, _signal: AbortSignal) => registration(sub)), authenticate: vi.fn(async (_id: string, _credential: InstallationCredential, _signal: AbortSignal) => ({ accessToken: "ACCESS_SECRET", expiresIn: 300, refreshToken: "REFRESH_SECRET" })),
     send: vi.fn(async (events: UsageEvent[]) => { sent.push(events); }),
     requestDeletion: vi.fn(async (_token: string, _signal: AbortSignal) => ({ schema_version: 1 as const, request_id: randomUUID(),
       requested_at: new Date(now).toISOString(), completion_due_at: new Date(now + 7 * 86400_000).toISOString(), status: "accepted" as const })) };
@@ -51,19 +52,21 @@ describe("usage event privacy contract", () => {
 
 describe("event-first Local sender", () => {
   it("expires across projects at the cutoff, without a fake withdrawal or a new grant on return", async () => {
-    const f = await fixture(), day = 86_400_000;
+    const f = await fixture();
+    f.transport.register.mockResolvedValueOnce(registration(f.sub, 300));
     const options = {...f.options,config:{...config,privacy:{...config.privacy,noticeVersion:"installation-retention-180d-v1"}}};
     const a = new LocalEventTelemetry(options);
-    await a.choose("yes"); await a.flush(); f.advance(179*day);
+    await a.choose("yes"); await a.flush(); f.advance(299_000);
     for (const action of ["connection_created","configuration_saved"] as const) await a.finish((await a.begin(action))!, false);
     await a.flush(); expect(f.sent.flat().slice(-2).map(e=>e.kind)).toEqual(["arkimux.event.connection.create.error","arkimux.event.configuration.save.error"]);
-    f.advance(180*day-1); await a.start(); expect((await a.status()).sharingEnabled).toBe(true); f.advance(1);
+    f.advance(300_000-1); await a.start(); expect((await a.status()).sharingEnabled).toBe(true); f.advance(1);
     const b = new LocalEventTelemetry({...options,projectRoot:"another-project"});
     expect(await b.begin("connection_tested")).toBeUndefined();
+    expect(f.transport.register).toHaveBeenCalledTimes(1);
     expect(await b.status()).toMatchObject({choice:"undecided", consentExpired:true, installationId:null, promptEligible:true,pendingEventCount:0});
     expect((await b.status()).privacyHistory.map(e=>e.kind)).toEqual(["consent_expired","consent_granted"]);
     await b.choose("ask-later"); expect((await b.status()).sharingEnabled).toBe(false);
-    f.transport.register.mockResolvedValueOnce(randomUUID()); await b.choose("yes"); await b.flush();
+    f.transport.register.mockResolvedValueOnce(registration(randomUUID())); await b.choose("yes"); await b.flush();
     expect((await b.status()).installationId).not.toBe(f.sub);
     expect(f.sent.flat().filter(e=>e.kind==="arkimux.event.consent.success")).toHaveLength(2);
   });
@@ -81,11 +84,14 @@ describe("event-first Local sender", () => {
     expect(parseVersionedUsageBatch({events}, config)).toEqual(events);
     expect(() => parseVersionedUsageBatch({events:[{...events[0],consent_journey_id:randomUUID()}]}, config)).toThrow();
   });
-  it("does not carry earlier Yes or queued events into the withdrawal archive notice",async()=>{
+  it.each([
+    ["usage-with-withdrawal-archive-v1","usage-with-withdrawal-archive-v1-disclosed"],
+    ["dev-sandbox-archive-v1","dev-sandbox-archive-v1"],
+  ])("requires a fresh Yes before sending to %s", async (noticeVersion,expectedNotice)=>{
     const f=await fixture();
     await f.sender.choose("yes");
-    const next=new LocalEventTelemetry({...f.options,config:{...config,privacy:{...config.privacy,noticeVersion:"usage-with-withdrawal-archive-v1"}}});
-    expect(await next.status()).toMatchObject({choice:"undecided",sharingEnabled:false,privacyNoticeVersion:"usage-with-withdrawal-archive-v1-disclosed"});
+    const next=new LocalEventTelemetry({...f.options,config:{...config,privacy:{...config.privacy,noticeVersion}}});
+    expect(await next.status()).toMatchObject({choice:"undecided",sharingEnabled:false,privacyNoticeVersion:expectedNotice});
     await next.start(); await next.flush(); expect(f.sent).toHaveLength(0);
     await next.choose("yes"); await next.flush();
     expect(f.sent.flat().map(e=>e.kind)).toEqual(["arkimux.event.consent.success"]);
@@ -106,7 +112,7 @@ describe("event-first Local sender", () => {
     expect(oldHistory.map(e => e.kind)).toEqual(["deletion_accepted", "deletion_requested", "sharing_stopped", "consent_granted"]);
     expect(oldHistory.every(e => e.installationId === f.sub)).toBe(true);
     expect(oldHistory.some(e => e.kind === "deletion_completed")).toBe(false);
-    const newSub = randomUUID(); f.transport.register.mockResolvedValueOnce(newSub); f.advance(1000);
+    const newSub = randomUUID(); f.transport.register.mockResolvedValueOnce(registration(newSub)); f.advance(1000);
     const restarted = new LocalEventTelemetry(f.options);
     await restarted.choose("yes"); await restarted.flush();
     const status = await restarted.status();
@@ -122,7 +128,7 @@ describe("event-first Local sender", () => {
   it("recovers only known legacy history and never assigns a new installation to an old receipt", async () => {
     const f = await fixture(); await f.sender.choose("yes"); await f.sender.flush();
     await f.sender.requestDeletion(); await f.sender.flush(); await f.sender.flush();
-    const newSub = randomUUID(); f.transport.register.mockResolvedValueOnce(newSub); f.advance(1000);
+    const newSub = randomUUID(); f.transport.register.mockResolvedValueOnce(registration(newSub)); f.advance(1000);
     await f.sender.choose("yes"); await f.sender.flush();
     await f.state.update(s => { delete s.privacyHistory; delete s.remoteDeletion!.installationId; delete s.remoteDeletion!.requestedAt; });
     const history = (await new LocalEventTelemetry(f.options).status()).privacyHistory;
@@ -406,10 +412,10 @@ describe("event-first Local sender", () => {
   });
   it("withdraws immediately during registration and deletes old credentials in the background", async () => {
     const f = await fixture(); await f.sender.choose("yes");
-    let finish!: (value: string) => void;
+    let finish!: (value: ReturnType<typeof registration>) => void;
     f.transport.register.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
     const pump = f.sender.flush(); await vi.waitFor(() => expect(finish).toBeTypeOf("function"));
-    await f.sender.choose("no"); finish(f.sub); await pump;
+    await f.sender.choose("no"); finish(registration(f.sub)); await pump;
     expect(f.transport.authenticate).not.toHaveBeenCalled(); expect(f.transport.send).not.toHaveBeenCalled();
     await f.sender.flush(); expect(f.secrets.size).toBe(0); expect((await f.read()).outbox).toHaveLength(0);
   });
@@ -526,6 +532,8 @@ describe("Cognito HTTP transport", () => {
   });
   it("attests the archive notice only on a consent upload from the new configuration", async()=>{
     for(const [notice,kind,shouldMark] of [["old","arkimux.event.consent.success",false],
+      ["dev-sandbox-archive-v1","arkimux.event.local.start",false],
+      ["dev-sandbox-archive-v1","arkimux.event.consent.success",true],
       ["usage-with-withdrawal-archive-v1","arkimux.event.local.start",false],
       ["usage-with-withdrawal-archive-v1","arkimux.event.consent.success",true]] as const) {
       const event={...transportUsage(),kind};
@@ -545,6 +553,16 @@ describe("Cognito HTTP transport", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it.each([undefined, 0, -1, 0.5, "300", 180 * 86400 + 1])("does not authenticate or upload without a valid F5 registration policy (%s)", async value => {
+    const f = await fixture();
+    const fetcher = vi.fn(async () => Response.json({ installation_id: f.sub, client_id: config.clientId,
+      user_pool_id: config.userPoolId, inactivity_expiry_seconds: value }));
+    const sender = new LocalEventTelemetry({ ...f.options, transport: createTelemetryTransport(config, fetcher) });
+    await sender.choose("yes"); await sender.flush();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect((await f.read()).identity?.sub).toBeUndefined();
+    expect((await sender.status()).pendingEventCount).toBe(1);
+  });
   it("posts deletion without an installation ID and validates the durable receipt", async () => {
     const receipt = { schema_version: 1, request_id: randomUUID(), status: "accepted",
       requested_at: "2026-09-30T00:00:00.000Z", completion_due_at: "2026-10-07T00:00:00.000Z" };
@@ -562,11 +580,11 @@ describe("Cognito HTTP transport", () => {
     const sub = "11223344-5566-7001-0123-123456789abc", id = randomUUID(); const calls: Array<{ url: string; body: any; headers: any; redirect: unknown }> = [];
     const fetcher = vi.fn(async (url: any, init: any) => {
       const body = JSON.parse(init.body); calls.push({ url: String(url), body, headers: init.headers, redirect: init.redirect });
-      if (String(url).endsWith("installations")) return Response.json({ installation_id: sub, user_pool_id: config.userPoolId, client_id: config.clientId });
+      if (String(url).endsWith("installations")) return Response.json({ installation_id: sub, inactivity_expiry_seconds: 300, user_pool_id: config.userPoolId, client_id: config.clientId });
       return Response.json({ AuthenticationResult: { AccessToken: "access", ExpiresIn: 300, RefreshToken: "refresh" } });
     });
     const transport = createTelemetryTransport(config, fetcher);
-    expect(await transport.register(id, "a".repeat(43), new AbortController().signal)).toBe(sub);
+    expect(await transport.register(id, "a".repeat(43), new AbortController().signal)).toEqual(registration(sub, 300));
     await transport.authenticate(id, { secret: "s" }, new AbortController().signal);
     await transport.authenticate(id, { secret: "s", refreshToken: "refresh" }, new AbortController().signal);
     expect(calls[0].url).toBe("https://collector.example/collect/v1/installations");
