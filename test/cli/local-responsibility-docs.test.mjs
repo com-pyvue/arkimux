@@ -23,6 +23,30 @@ test("public guidance has working local links and no internal review notes", asy
   }
 });
 
+test("third-party notices point to the archive recorded in the lockfile", async () => {
+  const { packages: records } = JSON.parse(await read("licenses/dependency-inventory.json"));
+  const { packages: lock } = JSON.parse(await read("package-lock.json"));
+  const rows = (await read("THIRD_PARTY_NOTICES.md")).split("\n").filter(line => line.startsWith("| ")).slice(2);
+  assert.equal(rows.length, records.length);
+  for (const [i, pkg] of records.entries()) {
+    assert.ok(rows[i].startsWith(`| ${pkg.name} | ${pkg.version} |`));
+    if (rows[i].includes("Exact package URL in inventory")) assert.ok(pkg.packageUrl, pkg.name);
+  }
+  for (const [location, child] of Object.entries(lock).filter(([, entry]) => entry.inBundle)) {
+    const parent = location.split("/node_modules/").slice(0, -1);
+    while (parent.length && lock[parent.join("/node_modules/")]?.inBundle) parent.pop();
+    const archive = lock[parent.join("/node_modules/")];
+    assert.ok(archive?.resolved, location);
+    const name = archive.name ?? parent.at(-1).split("node_modules/").at(-1);
+    const expected = { name, version: archive.version, packageUrl: archive.resolved };
+    const childName = child.name ?? location.split("node_modules/").at(-1);
+    const index = records.findIndex(pkg => pkg.name === childName && pkg.version === child.version && pkg.bundledIn?.packageUrl === archive.resolved);
+    assert.notEqual(index, -1, location);
+    assert.deepEqual(records[index].bundledIn, expected);
+    assert.ok(rows[index].includes(`[${name}@${archive.version}](${archive.resolved})`), location);
+  }
+});
+
 test("package README links stay inside the package or point to public repository files", async () => {
   const githubMain = "https://github.com/com-pyvue/arkimux/blob/main/";
   for (const pkg of ["cli", "local"]) {

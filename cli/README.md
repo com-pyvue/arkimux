@@ -95,8 +95,8 @@ If you use `guardProjectSourceEdits` in your own tooling, pass SHA-256 file
 hashes from before and after the edits. Without a baseline it returns
 `boundary-not-verified`. You do not need this helper to run `npm run validate`.
 
-`create-arkimux@0.1.0-alpha.2` delegates to this CLI's public
-`runArkiMuxCli` function. It does not contain another generator.
+`create-arkimux@0.1.0-alpha.2` calls `runCreateArkiMuxCli` from
+`@com-pyvue/arkimux/create`. It does not contain another generator.
 
 ## Debug a workflow
 

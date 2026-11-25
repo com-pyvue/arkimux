@@ -65,11 +65,10 @@ route exists, and Agent Templates and workflow Run Configurations persist only
 the selected authentication-configuration ID. Keep `.arkimux/local/` ignored
 by Git.
 
-The **Connections** table includes
-platform-owned, read-only native sessions together with user-created API-key
-bindings. Native-session rows explain the required runtime login, such as
-`codex login` or Claude Code `/login`; they are not copied into the local
-definition store and cannot be archived by the user.
+In **Connections**, built-in connections are read-only. You can archive and
+restore connections you add, including ones that use a native CLI session.
+For those connections, ArkiMux stores the connection definition locally;
+the provider CLI keeps its own login credentials.
 
 Automatic workflow readiness remains a non-billable static preflight. The
 explicit **Test connection** action goes further: it runs one isolated,
@@ -98,10 +97,16 @@ It does not change `process.env` or fall back to parent files or shell values.
 has an explicit value map. Declarations contain names, required/secret flags,
 and `string` or `url` types; values and defaults are rejected.
 
-Required variables fail before the caller can invoke a workflow. URL variables
-must be absolute HTTP(S) URLs without user information. Errors name the variable
-but never print its value. Reloading requires another explicit load; no file
-watcher is installed. The `secret` flag is metadata, not secure storage.
+Local handles the two kinds of settings differently for portable workflows:
+
+- **Non-secret settings:** Local reads and validates them when it registers the
+  workflow. A missing required value prevents registration. URL settings must
+  be absolute HTTP(S) URLs without user information. Local saves the values
+  with each Run so it can resume with the same settings.
+- **Effect secrets:** Local saves only their declared names with the Run. When
+  preparing each execution attempt, it reads the values from the project's
+  current `.env` for the effect adapters. A missing secret fails the attempt,
+  not registration. Marking a value as secret does not encrypt the `.env` file.
 
 The server exposes its runtime profile through `/api/v1/ui-configuration`, so
 the same compiled frontend can be reused by different hosts. Set

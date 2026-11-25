@@ -1,21 +1,22 @@
 # External and internal error diagnostics
 
-When a provider fails, Local shows its explanation after removing credentials.
+When a provider fails, Local redacts known credential values and common secret
+patterns from its error message. Other sensitive details may remain. Review
+the message before sharing it.
 When ArkiMux itself fails, Local shows a short message rather than exposing the original exception.
 
 ## What you see
 
 - Preserve a provider's selected error message, code and HTTP status. Keep its
   formatting, option lists, public links and request identifiers.
-- Remove actual credentials and terminal control sequences. A provider response
-  is not assumed to be secret-free. Do not remove ordinary explanations merely
-  because they mention a key, token, path, payload or model.
+- Local strips terminal control sequences but keeps ordinary explanations that
+  mention a key, token, path, payload or model.
 - Select explicit error events, not unrelated assistant output or entire
   request/response objects. Existing process and response-size guards still apply.
 - Unknown ArkiMux exceptions become a short, authored message. Do not publish
   their stack, host paths, raw exception objects or arbitrary `Error.message`.
 - A shortened debugger response points to saved failure evidence containing the
-  complete safe diagnostic. Storage does not silently shorten provider messages.
+  complete redacted diagnostic. Storage does not silently shorten provider messages.
 
 ## Adapter and effect boundary
 
@@ -31,8 +32,9 @@ throw new ExternalProviderError("weather", providerMessage, {
 
 The public metadata is `{ origin: "external", provider, message, code?,
 httpStatus? }`. Runtime wrappers preserve this metadata; they do not infer the
-origin from the wording of an arbitrary exception. Credentials are removed at
-the adapter before the error crosses IPC or enters storage.
+origin from the wording of an arbitrary exception. Pass known credential values
+in `secretValues` so they are redacted along with recognized patterns before
+the error leaves the adapter or is stored.
 
 `public-workflow-imports@2` permits the diagnostic error/types,
 `getExternalErrorDiagnostic`, and `credentialSecretValues` from the Core package.

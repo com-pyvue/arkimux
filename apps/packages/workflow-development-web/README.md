@@ -1,18 +1,17 @@
 # Workflow development web host
 
-This package provides the browser composition boundary used by workflow
-repositories. It mounts the local Runs experience against an Agent Execution
-API and accepts workflow-owned result renderers at build time.
+Use `WorkflowDevelopmentWebApp` to display Local Runs in your React app:
 
 ```tsx
-<WorkflowDevelopmentWebApp
-  apiBaseUrl="http://127.0.0.1:8787"
-  resultPlugins={[decisionBriefResultPlugin]}
-/>
+import { WorkflowDevelopmentWebApp } from "@com-pyvue/agent-execution-workflow-development-web";
+import "@com-pyvue/agent-execution-workflow-development-web/styles.css";
+
+export default function App() {
+  return <WorkflowDevelopmentWebApp apiBaseUrl="http://127.0.0.1:8787" />;
+}
 ```
 
-Import `@com-pyvue/agent-execution-workflow-development-web/styles.css` once in
-the workflow application's browser entry point.
-
-Renderer modules are compiled into the workflow application's own Vite bundle.
-The host does not download or execute renderer code dynamically.
+Set `apiBaseUrl` to the API address printed by Local. No custom renderer is
+required. If your app defines result renderers, pass them in the optional
+`resultPlugins` array. Vite includes those modules in your app's bundle; the
+host does not download renderer code at runtime.

@@ -2,7 +2,7 @@
 
 ArkiMux-authored source uses Apache-2.0 unless stated otherwise. Dependencies retain their own licences and copyright notices; they are not relicensed by ArkiMux.
 
-This inventory comes from the checked-in npm lockfile and includes development, test and optional platform packages, not just code shipped in an artifact. Licence texts present in installed packages are preserved under `licenses/third-party/`. Platform-specific packages not installed on this machine retain the licence declaration from the lockfile and the exact package URL in [the machine-readable inventory](licenses/dependency-inventory.json).
+This inventory comes from the checked-in npm lockfile and includes development, test and optional platform packages, not just code shipped in an artifact. Licence texts present in installed packages are preserved under `licenses/third-party/`. Where no licence file is listed, see [the machine-readable inventory](licenses/dependency-inventory.json) for the package URL if available. For bundled dependencies, use the containing package archive linked below.
 
 The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components and CC-BY-4.0 data; their own terms remain applicable.
 
@@ -40,9 +40,9 @@ The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components an
 | @csstools/css-parser-algorithms | 4.0.2 | MIT | [LICENSE.md](licenses/third-party/csstools--css-parser-algorithms@4.0.2/LICENSE.md) |
 | @csstools/css-syntax-patches-for-csstree | 1.1.16 | MIT-0 | [LICENSE.md](licenses/third-party/csstools--css-syntax-patches-for-csstree@1.1.16/LICENSE.md) |
 | @csstools/css-tokenizer | 4.0.2 | MIT | [LICENSE.md](licenses/third-party/csstools--css-tokenizer@4.0.2/LICENSE.md) |
-| @emnapi/core | 1.11.1 | MIT | Exact package URL in inventory |
-| @emnapi/runtime | 1.11.1 | MIT | Exact package URL in inventory |
-| @emnapi/wasi-threads | 1.2.2 | MIT | Exact package URL in inventory |
+| @emnapi/core | 1.11.1 | MIT | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
+| @emnapi/runtime | 1.11.1 | MIT | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
+| @emnapi/wasi-threads | 1.2.2 | MIT | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
 | @esbuild/aix-ppc64 | 0.28.2 | MIT | Exact package URL in inventory |
 | @esbuild/android-arm | 0.28.2 | MIT | Exact package URL in inventory |
 | @esbuild/android-arm64 | 0.28.2 | MIT | Exact package URL in inventory |
@@ -90,7 +90,7 @@ The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components an
 | @napi-rs/keyring-win32-ia32-msvc | 2.1.0 | MIT | Exact package URL in inventory |
 | @napi-rs/keyring-win32-x64-msvc | 2.1.0 | MIT | Exact package URL in inventory |
 | @napi-rs/lzma-linux-x64-gnu | 1.5.1 | MIT | Exact package URL in inventory |
-| @napi-rs/wasm-runtime | 1.1.4 | MIT | Exact package URL in inventory |
+| @napi-rs/wasm-runtime | 1.1.4 | MIT | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
 | @radix-ui/react-compose-refs | 1.1.5 | MIT | [LICENSE](licenses/third-party/radix-ui--react-compose-refs@1.1.5/LICENSE) |
 | @radix-ui/react-slot | 1.5.0 | MIT | [LICENSE](licenses/third-party/radix-ui--react-slot@1.5.0/LICENSE) |
 | @rolldown/pluginutils | 1.0.0-rc.3 | MIT | [LICENSE](licenses/third-party/rolldown--pluginutils@1.0.0-rc.3/LICENSE) |
@@ -145,7 +145,7 @@ The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components an
 | @testing-library/jest-dom | 7.0.1 | MIT | [LICENSE](licenses/third-party/testing-library--jest-dom@7.0.1/LICENSE) |
 | @testing-library/react | 16.3.3 | MIT | [LICENSE](licenses/third-party/testing-library--react@16.3.3/LICENSE) |
 | @testing-library/user-event | 14.6.8 | MIT | [LICENSE](licenses/third-party/testing-library--user-event@14.6.8/LICENSE) |
-| @tybys/wasm-util | 0.10.2 | MIT | Exact package URL in inventory |
+| @tybys/wasm-util | 0.10.2 | MIT | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
 | @types/aria-query | 5.0.4 | MIT | [LICENSE](licenses/third-party/types--aria-query@5.0.4/LICENSE) |
 | @types/babel__core | 7.20.5 | MIT | [LICENSE](licenses/third-party/types--babel__core@7.20.5/LICENSE) |
 | @types/babel__generator | 7.27.0 | MIT | [LICENSE](licenses/third-party/types--babel__generator@7.27.0/LICENSE) |
@@ -369,7 +369,7 @@ The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components an
 | tldts-core | 7.4.20 | MIT | [LICENSE](licenses/third-party/tldts-core@7.4.20/LICENSE) |
 | tough-cookie | 6.0.2 | BSD-3-Clause | [LICENSE](licenses/third-party/tough-cookie@6.0.2/LICENSE) |
 | tr46 | 6.0.0 | MIT | [LICENSE.md](licenses/third-party/tr46@6.0.0/LICENSE.md) |
-| tslib | 2.8.1 | 0BSD | Exact package URL in inventory |
+| tslib | 2.8.1 | 0BSD | Bundled in [@tailwindcss/oxide-wasm32-wasi@4.3.3](https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz) |
 | typescript | 5.9.3 | Apache-2.0 | [LICENSE.txt](licenses/third-party/typescript@5.9.3/LICENSE.txt) |
 | typescript | 7.0.2 | Apache-2.0 | [LICENSE](licenses/third-party/typescript@7.0.2/LICENSE), [NOTICE.txt](licenses/third-party/typescript@7.0.2/NOTICE.txt) |
 | undici | 7.30.1 | MIT | [LICENSE](licenses/third-party/undici@7.30.1/LICENSE) |

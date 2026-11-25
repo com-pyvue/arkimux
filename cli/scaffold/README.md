@@ -25,10 +25,11 @@ npm run validate
 npm run dev
 ```
 
-The URL is required; there is no built-in default URL. Startup reads one snapshot
-of `.env` and passes only declared variables to the weather effect. The URL is
-not passed to agent processes, prompts, results, or run artifacts. Keep `.env`
-out of Git. Restart after changing it.
+`WEATHER_API_URL` is required and has no default. Local reads it at startup
+and saves its value with each Weather Advisor Run so the weather effect can use
+the same URL if the Run resumes. Do not put credentials in the URL, including
+its query string. Keep `.env` out of Git. After changing the URL, restart Local
+to use the new value for new Runs.
 
 Open the printed Connections URL. The default Run Configuration uses your
 existing Codex Native Session. Log in with `codex login` if needed; provider
@@ -50,8 +51,8 @@ the same nodes and dependencies used by execution. The final node only assembles
 the result; there are still one weather request and two agent operations.
 `weather:run` supplies the city to the default graph entry. The Local UI also
 offers supplied or deferred input and starting at later steps with their complete
-required inputs. Prompts and the weather environment are pinned in the retained
-build by `workflows/weather-advisor/src/construction.ts`.
+required inputs. The workflow constructor reads the prompt files from the
+retained build; it does not receive the weather URL.
 
 The reader waits for completion and validates the typed Weather Advisor result.
 Use the Local UI Results tab for the project-owned React view or the original
