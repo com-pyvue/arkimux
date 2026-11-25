@@ -42,11 +42,15 @@ source, dependency and notice checks.
 
 ## Decisions still needed
 
-The final pack needs the legal operator and trademark owner, a public privacy
-contact, and an effective date. The [security reporting channel](../../SECURITY.md)
-is available now and is not the privacy contact. The proposed support and trademark
-policies also need owner approval. Those are review drafts, not promises that
-those policies or contact channels are active.
+Pyvue LLC is the operator. The monitored privacy contact is <privacy@arkimux.ai>;
+the [security reporting channel](../../SECURITY.md) is for vulnerabilities.
+Before publishing the final privacy notice, confirm the production recipient
+and retention policy, relevant jurisdictions and transfer safeguards, handling
+and retention of privacy correspondence, and the effective date. The sandbox
+archive is not a production retention decision.
+
+The trademark owner and the proposed support and trademark policies still need
+owner confirmation. Naming the operator does not settle trademark ownership.
 Whether to obtain external legal review will be decided separately.
 
 ## Primary references
