@@ -1,7 +1,11 @@
 # ArkiMux CLI
 
 The CLI creates a project with Weather Advisor and Graph Invocation. Each project
-pins its own CLI. Use Node.js 24 or newer. From the directory where you created `my-agent-app`, run:
+pins its own CLI. The project creator and CLI are not yet published to public
+npm. There is no supported from-source project creation command.
+
+If you already have a generated project named `my-agent-app`, use Node.js 24
+or newer and run these commands from its parent directory:
 
 ```bash
 cd my-agent-app

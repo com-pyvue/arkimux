@@ -6,7 +6,8 @@ implementation. The generator owns project files, installation, and next steps.
 
 Requires Node.js 24.0.0 or newer.
 
-For installations using this version from an npm registry:
+The bootstrap and its pinned CLI are not yet published to public npm. Once
+both versions are published, the command for this version will be:
 
 ```sh
 npm create arkimux@0.1.0-alpha.2 my-agent-app

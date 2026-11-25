@@ -109,5 +109,5 @@ Local handles the two kinds of settings differently for portable workflows:
   current `.env` for the effect adapters. A missing secret fails the attempt,
   not registration. Marking a value as secret does not encrypt the `.env` file.
 
-The Local UI reads `/api/v1/ui-configuration` to decide which screens to show.
-This setting changes what you see, not what you have permission to do.
+The Local UI reads its profile from `/api/v1/ui-configuration`. The profile
+controls which screens appear; it does not grant permissions.

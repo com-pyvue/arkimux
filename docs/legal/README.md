@@ -1,6 +1,6 @@
 # Local rights and responsibilities
 
-These documents cover ArkiMux Local, which runs on your computer. They do not cover Managed hosting.
+These documents cover ArkiMux Local, which runs on your computer. They do not cover hosted ArkiMux services.
 For which terms apply, see [Scope and precedence](#scope-and-precedence).
 
 | Document | What it covers |

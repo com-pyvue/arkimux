@@ -16,8 +16,9 @@ These checks do not call a provider, read user sessions, prove installed upstrea
 CLI compatibility, or prove whole-workflow replay and Results API persistence.
 Native session values are synthetic. A passing offline test is not a live result.
 
-To run the [live suite](vitest.live.config.ts), get explicit approval to spend
-provider quota first. Copy the [example case file](live/cases.example.json)
+The [live suite](vitest.live.config.ts) makes billable calls with the configured
+credentials. If the quota is not yours, get the account owner's approval first.
+To run it, copy the [example case file](live/cases.example.json)
 outside the repository. Set the installed CLI path and exact version, the model
 you intend to call, and your evidence directory. Supply the credential through
 the environment variable named in the case file, not in the JSON. From the

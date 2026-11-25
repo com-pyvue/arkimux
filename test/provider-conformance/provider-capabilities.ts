@@ -266,6 +266,14 @@ export const providerEvidence = [
     displayName: "Connection handling: Codex native, Pi Codex native, Pi Anthropic API key and Claude native",
     notes: "Controlled CLI processes exercise completion, cancellation, timeout and provider failure for four Local connections, checking failure codes and process exit. The Claude native-session cases validate native tool counts on success and failure; no live account is used.",
   },
+  {
+    evidenceId: "APC-E022",
+    level: "adapter",
+    providerIds: ["pi-cli", "kimi-code-cli"],
+    sourcePath: "test/provider-conformance/contract/agent-execution-provider.contract.test.ts",
+    testName: "reports invalid-provider-response when the CLI exits without a final answer",
+    notes: "Simulated Pi and Kimi CLIs exit successfully without a final answer. Both adapters report the same diagnostic code.",
+  },
 ] as const satisfies readonly ProviderEvidenceDefinition[];
 
 export const providerGaps = [
@@ -884,9 +892,9 @@ export const providerCapabilities = [
     description: "Map provider-native failures to safe, actionable, provider-neutral categories.",
     providers: {
       "codex-cli": partial("Preserves selected provider explanations and keeps credential redaction separate; provider-specific causes are not fully classified.", ["APC-E003"], ["APC-GAP-011"]),
-      "pi-cli": unsupported("Preserves selected provider explanations; provider-specific causes are not fully classified.", ["APC-GAP-011"]),
+      "pi-cli": partial("Reports invalid-provider-response when the CLI returns no final answer. Not all provider-specific failures have a common code.", ["APC-E022"], ["APC-GAP-011"]),
       "claude-code-cli": partial("Preserves the native-session failure explanation without guessing plan eligibility; provider-specific causes are not fully classified.", ["APC-E008"], ["APC-GAP-011"]),
-      "kimi-code-cli": unsupported("Preserves selected provider explanations; provider-specific causes are not fully classified.", ["APC-GAP-011"]),
+      "kimi-code-cli": partial("Reports invalid-provider-response when the CLI returns no final answer. Not all provider-specific failures have a common code.", ["APC-E022"], ["APC-GAP-011"]),
     },
   },
   {
@@ -1147,7 +1155,7 @@ export function renderProviderExecutionCombinationMatrix(): string {
 export function renderProviderEvidenceTable(): string {
   const rows = providerEvidence.map((evidence) => `| \`${evidence.evidenceId}\` | ${evidence.level} | ${evidence.providerIds.map((providerId) => `\`${providerId}\``).join(", ")} | \`${markdown(evidence.sourcePath)}\` | ${markdown("displayName" in evidence ? evidence.displayName : evidence.testName)} | ${markdown(evidence.notes)} |`);
   return [
-    "| Evidence ID | Level | Providers | Test file | Test name | What it proves |",
+    "| Evidence ID | Level | Providers | Test file | Test coverage | What it proves |",
     "| --- | --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n") + "\n";

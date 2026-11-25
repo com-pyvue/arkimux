@@ -109,6 +109,9 @@ If the background server is running, stop it before starting the IDE debugger:
 npm run dev:stop
 ```
 
+This stops only this project's background server. Run data stays under
+`.arkimux/local/`.
+
 Select **ArkiMux Local Debug** in your IDE and click **Debug**. Use Node 24
 or newer. VS Code/Cursor use `.vscode/launch.json`; WebStorm uses the saved `.run`
 configuration (enable **Attach to subprocesses automatically** in its Node.js
@@ -135,9 +138,6 @@ settings are not passed to native agent processes.
 
 ArkiMux owns server startup, recovery and shutdown. The project contains workflow
 declarations and source, not server integration code.
-
-This stops only this project's server. Run data stays under ignored
-`.arkimux/local/`.
 
 ## Edit the project
 

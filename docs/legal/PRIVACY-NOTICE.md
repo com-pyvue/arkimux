@@ -20,7 +20,7 @@ vault. On POSIX systems Local requests mode `0600` (owner read/write) for new
 key files; migration preserves an existing file's permissions, which may be
 broader. On Windows, check the file's access control list. Native provider CLIs
 manage their own login data.
-Neither is the telemetry posting credential, which uses the OS credential store.
+Local stores the separate telemetry credential in the OS credential store.
 Protect the host and exclude credentials and local state from source control.
 
 ## Optional usage sharing
@@ -44,7 +44,7 @@ identity with the dedicated AWS Cognito service in the background. Its posting
 credential stays in the OS credential store, not in the browser. The resulting
 ID is pseudonymous, not anonymous: it connects usage across your projects for
 that OS user account. It is not based on a MAC address or hardware fingerprint
-and is not joined to a Managed user account.
+and is not linked to a hosted ArkiMux account.
 
 The Local API/runtime sends these coded event groups to the ArkiMux Telemetry
 Service on AWS: consent granted, Local started, connection created or tested,
@@ -62,7 +62,7 @@ an opaque operation ID. The older event format also includes a consent-journey
 ID; the installation-retention and dev-sandbox formats do not. The service adds
 receipt time. Usage events do not contain workflow source, inputs, prompts,
 outputs, Run IDs, absolute paths, provider error content, credentials, human
-identity or Managed identity.
+identity or hosted ArkiMux account identity.
 AWS necessarily processes network addresses for transport and security; an IP
 address is not a field in the analytics event schema.
 
@@ -154,8 +154,8 @@ responsible for your location.
 We do not use your email address as the installation ID. If you need help with
 a specific withdrawal, tell us which notice you saw and whether Local showed a
 request receipt. An installation ID alone is not proof that you control it.
-Where a sandbox archive has already removed the link to your installation, we
-cannot use that ID to find or erase its archived rows.
+Once an archive has removed the link to your installation, we cannot use your
+installation ID to find or erase those rows.
 
 ## Diagnostics and deliberate sharing
 
@@ -174,7 +174,6 @@ does not delete a GitHub issue.
 ## Separate permissions
 
 Local usage consent is separate from the Apache licence, workflow permissions,
-provider accounts and payment. If you take part in an observed study session,
-its detailed records stay on your computer. Sharing Local usage does not give
+provider accounts and payment. Sharing Local usage does not give
 permission to track your website visits or contact you through an interest form
 or for marketing.

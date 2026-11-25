@@ -7,8 +7,8 @@ Sign off new public contributions under DCO 1.1. No additional CLA is required.
 Open a focused issue or describe the problem in a pull request. Keep unrelated
 changes separate. Follow [AGENTS.md](AGENTS.md), use Node.js 24 or newer, and run
 the documented checks relevant to the change. Tests should use synthetic data;
-do not add credentials, real customer data, local Run state or private Platform
-source. Never run a paid provider test or change an external system without
+do not add credentials, real customer data, local Run state or private source
+code. Never run a paid provider test or change an external system without
 separate authorization.
 
 Use documented public package imports for workflow examples. Preserve existing

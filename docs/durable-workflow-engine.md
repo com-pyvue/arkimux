@@ -41,17 +41,11 @@ records the workflow and step definition versions, input hash, state, current
 attempt, output or output reference, execution facts, performance, artifacts,
 and failure or unknown-outcome information.
 
-The minimum states are:
-
-```text
-PENDING -> RUNNING -> COMPLETED
-                   -> WAITING_FOR_INPUT -> COMPLETED
-                                        -> CANCELLED
-                                        -> EXPIRED
-                   -> FAILED
-                   -> CANCELLED
-                   -> OUTCOME_UNKNOWN
-```
+The six [step checkpoint states](../core/src/application/durableExecution.ts) are
+`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`, `CANCELLED`, and `OUTCOME_UNKNOWN`.
+To find out whether a Run is waiting for input, check the Run status for
+`waiting_for_input`. To find out whether the request expired, check the input
+request status for `expired`. These are [separate from the checkpoint](../core/src/application/inputWaitState.ts).
 
 `OUTCOME_UNKNOWN` is the internal checkpoint state. The public typed reason is
 `outcome_unknown`.
