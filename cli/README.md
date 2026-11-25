@@ -18,9 +18,10 @@ npm run dev:stop
 configuration, credentials, and process files live under the Git-ignored
 `.arkimux/local/` directory.
 
-The Weather Advisor effect alone has a narrowly scoped expired-certificate
-fallback for `https://wttr.in`. New results use payload version `2` and display
-an insecure-connection warning if HTTP was used. This exception does not apply to other hosts or effects.
+If the certificate for `https://wttr.in` has expired, the Weather Advisor effect
+can retry over HTTP. New results use payload version `2` and show an
+insecure-connection warning only when this fallback is used. Configuring an
+HTTP URL directly does not trigger the warning.
 
 If Local reports that your project needs migration, stop its server before migrating:
 

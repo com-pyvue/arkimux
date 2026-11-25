@@ -31,12 +31,13 @@ Successful responses have `schemaVersion`, the same `id`, `ok: true`, and
 and `retry`. A `session.changed` event may arrive between responses. Match
 responses by `id`, not by line position.
 
-Request IDs must be unique while outstanding. Reuse a control ID only when
+The top-level request `id` is a nonempty string and must be unique among
+outstanding requests. Reuse a control ID only when
 retrying the identical control request. A changed request needs a new control
 ID. Each line and response is limited to 1 MiB.
 
-Use registered workflow and configuration IDs. Identifiers such as session,
-case, request, breakpoint, evaluation, and control IDs use lowercase letters,
+Use registered workflow and configuration IDs. Session, case, breakpoint,
+evaluation, and control IDs use lowercase letters,
 digits, and hyphens, begin with a letter or digit, and are at most 64 characters.
 
 A mock key is a stable declared operation ID. A fixture is either:
