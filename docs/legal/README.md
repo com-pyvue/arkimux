@@ -1,12 +1,13 @@
 # Local rights and responsibilities
 
 These documents cover ArkiMux Local, which runs on your computer. They do not cover Managed hosting.
+For which terms apply, see [Scope and precedence](#scope-and-precedence).
 
 | Document | What it covers |
 | --- | --- |
 | [Apache licence](../../LICENSE) | The unchanged licence for ArkiMux-authored source, unless a file states otherwise |
 | [NOTICE](../../NOTICE) and [third-party notices](../../THIRD_PARTY_NOTICES.md) | Attribution and dependencies that keep their own terms |
-| [Licence and distribution guide](LICENSE-AND-NOTICES.md) | Source, packages, generated applications and document precedence |
+| [Licence and distribution guide](LICENSE-AND-NOTICES.md) | Source, packages and generated applications |
 | [Generated project rights](../../GENERATED_PROJECTS.md) | Your application and additions versus ArkiMux and third-party content |
 | [Responsibilities](RESPONSIBILITY-MATRIX.md) | Who operates Local, pays providers and reviews workflow behavior |
 | [Privacy notice](PRIVACY-NOTICE.md) | Local data, optional usage sharing, diagnostics and deletion |

@@ -8,7 +8,7 @@ This self-contained ArkiMux project includes two workflows:
   supplied or deferred input at Step 1, Step 2, and one ordered-map item. It
   also demonstrates branch/join, loop, ordered map, and accumulator reduce.
 
-The workflows are yours to edit. No Platform checkout is needed.
+The workflows are yours to edit.
 
 Requires Node.js >=24.0.0 and npm 10.9.3. All dependencies are pinned.
 
@@ -103,6 +103,8 @@ critique. Completed steps retain their outputs for recovery.
 
 ## Debug and stop
 
+If the background server is running, stop it before starting the IDE debugger:
+
 ```bash
 npm run dev:stop
 ```
@@ -130,10 +132,6 @@ source or environment changes. Retained Runs execute their original build;
 if a source file has changed, the debugger opens the retained source instead of
 binding it to the edited file. Run deadlines still apply while paused. Debugger
 settings are not passed to native agent processes.
-
-```bash
-npm run dev:stop
-```
 
 ArkiMux owns server startup, recovery and shutdown. The project contains workflow
 declarations and source, not server integration code.

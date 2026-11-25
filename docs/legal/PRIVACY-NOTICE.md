@@ -59,9 +59,10 @@ pauses, not hands-on work time.
 The allowed fields are schema version, random event and installation IDs,
 event kind, occurrence and send timestamps, ArkiMux version and, where needed,
 an opaque operation ID. The older event format also includes a consent-journey
-ID; the installation-retention and dev-sandbox formats do not. The service adds receipt time. Usage events do
-not contain workflow source, inputs, prompts, outputs, Run IDs, absolute paths,
-provider error content, credentials, human identity or Managed identity.
+ID; the installation-retention and dev-sandbox formats do not. The service adds
+receipt time. Usage events do not contain workflow source, inputs, prompts,
+outputs, Run IDs, absolute paths, provider error content, credentials, human
+identity or Managed identity.
 AWS necessarily processes network addresses for transport and security; an IP
 address is not a field in the analytics event schema.
 
@@ -173,8 +174,7 @@ does not delete a GitHub issue.
 ## Separate permissions
 
 Local usage consent is separate from the Apache licence, workflow permissions,
-provider accounts, payment and marketing consent. Detailed observed-session
-study records remain local and require an explicitly observed session; ordinary
-usage events are not proof of a complete measured session.
-
-This notice does not authorize website analytics or interest-form contact.
+provider accounts and payment. If you take part in an observed study session,
+its detailed records stay on your computer. Sharing Local usage does not give
+permission to track your website visits or contact you through an interest form
+or for marketing.

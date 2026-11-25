@@ -49,7 +49,7 @@ not in a quoted example or an embedded patch.
 
 Do not sign for someone else or certify rights you do not have. Before correcting
 your own unsigned commit, coordinate with anyone using that branch if the fix
-rewrites shared history. No additional CLA is required.
+rewrites shared history.
 
 A DCO sign-off is not an ownership assignment or a cryptographic signature.
 The name/email becomes public, long-lived commit history. AI assistance does not

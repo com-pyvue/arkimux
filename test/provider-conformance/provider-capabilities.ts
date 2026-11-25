@@ -56,6 +56,7 @@ export interface ProviderEvidenceDefinition {
   providerIds: readonly ProviderId[];
   sourcePath: string;
   testName: string;
+  displayName?: string;
   notes: string;
 }
 
@@ -262,6 +263,7 @@ export const providerEvidence = [
     providerIds: ["claude-code-cli", "pi-cli", "codex-cli"],
     sourcePath: "test/provider-conformance/contract/local-v2-connections.contract.test.ts",
     testName: "$id controlled Connection contract",
+    displayName: "Connection handling: Codex native, Pi Codex native, Pi Anthropic API key and Claude native",
     notes: "Controlled CLI processes exercise completion, cancellation, timeout and provider failure for four Local connections, checking failure codes and process exit. The Claude native-session cases validate native tool counts on success and failure; no live account is used.",
   },
 ] as const satisfies readonly ProviderEvidenceDefinition[];
@@ -356,7 +358,7 @@ export const providerGaps = [
     title: "Command authentication is configuration-only",
     status: "prospect",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
-    description: "The core authentication registry supports a credential command, but the current portal creates stored-credential bindings rather than command bindings.",
+    description: "The core authentication registry supports a credential command, but Connections creates stored-credential bindings rather than command bindings.",
   },
   {
     trackingId: "APC-GAP-016",
@@ -510,7 +512,7 @@ export const providerCapabilities = [
     description: "Use a login session owned by the selected CLI.",
     providers: {
       "codex-cli": supported("Uses Codex login status and isolated child home links.", ["APC-E003"]),
-      "pi-cli": partial("The generic runner can use auth.json, but Pi Anthropic native Connection setup and live proof are missing.", ["APC-E020"], ["APC-GAP-001", "APC-GAP-018"]),
+      "pi-cli": partial("The Pi runner can read an Anthropic session from auth.json. Local does not offer this Connection, and the tests use a simulated CLI.", ["APC-E020"], ["APC-GAP-001", "APC-GAP-018"]),
       "claude-code-cli": supported("Uses claude auth status and provider-reported identity when available.", ["APC-E008"]),
       "kimi-code-cli": experimental("Uses the configured Kimi native-session home.", ["APC-E010"], ["APC-GAP-016"]),
     },
@@ -533,10 +535,10 @@ export const providerCapabilities = [
     title: "Credential command",
     description: "Run a fixed helper and inject its stdout as the selected credential.",
     providers: {
-      "codex-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "pi-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "claude-code-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "kimi-code-cli": experimental("Implemented by the shared auth registry but outside the product promise.", ["APC-E012"], ["APC-GAP-015"]),
+      "codex-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "pi-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "claude-code-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "kimi-code-cli": experimental("The authentication registry accepts a credential command. Local does not offer this Kimi Connection.", ["APC-E012"], ["APC-GAP-015"]),
     },
   },
   {
@@ -560,7 +562,7 @@ export const providerCapabilities = [
       "codex-cli": noProxy,
       "pi-cli": noProxy,
       "claude-code-cli": noProxy,
-      "kimi-code-cli": unsupported("Kimi is not in the planned first proxy boundary.", ["APC-GAP-010"]),
+      "kimi-code-cli": unsupported("Kimi does not support provider proxy authentication.", ["APC-GAP-010"]),
     },
   },
   {
@@ -980,7 +982,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-anthropic-api-key",
     supportStatus: "partial",
     journey: "Local V2 revision 7 required; Managed V2 gate",
-    notes: "The configuration and catalog path exist, but current automated runner evidence does not call Anthropic through the real Pi CLI.",
+    notes: "Configuration and model lookup are tested. Runner tests use a simulated Pi CLI, not a live Anthropic account.",
     evidenceIds: ["APC-E004", "APC-E013"],
     trackingIds: ["APC-GAP-001"],
   },
@@ -1036,7 +1038,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "user-defined",
     supportStatus: "partial",
     journey: "Prospect only",
-    notes: "The core registry can run a fixed helper, but the portal does not create this binding and no live provider combination is certified.",
+    notes: "The core registry can run a fixed helper, but you cannot create this binding in Connections and these tests do not verify it with a live provider.",
     evidenceIds: ["APC-E012"],
     trackingIds: ["APC-GAP-001", "APC-GAP-015"],
   },
@@ -1143,7 +1145,7 @@ export function renderProviderExecutionCombinationMatrix(): string {
 }
 
 export function renderProviderEvidenceTable(): string {
-  const rows = providerEvidence.map((evidence) => `| \`${evidence.evidenceId}\` | ${evidence.level} | ${evidence.providerIds.map((providerId) => `\`${providerId}\``).join(", ")} | \`${markdown(evidence.sourcePath)}\` | ${markdown(evidence.testName)} | ${markdown(evidence.notes)} |`);
+  const rows = providerEvidence.map((evidence) => `| \`${evidence.evidenceId}\` | ${evidence.level} | ${evidence.providerIds.map((providerId) => `\`${providerId}\``).join(", ")} | \`${markdown(evidence.sourcePath)}\` | ${markdown("displayName" in evidence ? evidence.displayName : evidence.testName)} | ${markdown(evidence.notes)} |`);
   return [
     "| Evidence ID | Level | Providers | Test file | Test name | What it proves |",
     "| --- | --- | --- | --- | --- | --- |",

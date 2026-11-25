@@ -4,7 +4,7 @@ Develop and run durable agent workflows locally. Includes workflow contracts, th
 
 Requires Node.js 24 or newer. Run `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. No ArkiMux account or private source is needed. Provider-backed tests are separate and require your own provider access.
 
-Managed hosting and its cloud deployment services are separate. Original errors remain local; usage sharing is optional. See `docs/error-diagnostics.md`.
+Managed hosting and its cloud deployment services are separate. Original errors remain local; usage sharing is optional. See [Error diagnostics](docs/error-diagnostics.md).
 
 ## Source status
 

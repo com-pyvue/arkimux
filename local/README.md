@@ -8,8 +8,7 @@ npm run dev
 ```
 
 Open the Connections URL printed by the command. The launcher sets up the
-workflow developer role automatically; you do not need to create a platform
-administrator. A project can register several workflows. Its Run data and
+workflow developer role automatically; you do not need an administrator account. A project can register several workflows. Its Run data and
 configuration stay under `.arkimux/local/`. Use `npm run dev:stop` to stop
 only this project's server.
 
@@ -37,7 +36,7 @@ runtime readiness before it allows a run to start, so a missing executable or
 CLI-owned authentication session does not reserve a failed run.
 
 Workflow-local runtime composition should use the local authentication registry
-so API-key providers created in the portal become available without a server
+so API-key providers created in **Connections** become available without a server
 restart:
 
 ```ts
@@ -70,14 +69,16 @@ restore connections you add, including ones that use a native CLI session.
 For those connections, ArkiMux stores the connection definition locally;
 the provider CLI keeps its own login credentials.
 
-Automatic workflow readiness remains a non-billable static preflight. The
-explicit **Test connection** action goes further: it runs one isolated,
-tool-free, short-timeout inference through the selected runtime and auth
-binding. That action may consume provider quota. The portal stores and displays
-only the latest safe status, timestamp, latency, probe model, and summary. It
-does not retain the probe prompt, raw provider stream, temporary artifacts, or
-credential value. A successful probe proves connectivity for that binding at
-that moment, not access to every model in a workflow configuration.
+Automatic readiness checks do not send an inference request. If setup checks
+pass, **Test connection** tries a minimal, tool-free inference request that may
+use provider quota. A missing Codex login, for example, stops the test before
+inference. Success confirms the tested connection and model, not every model
+in a workflow configuration.
+
+Local keeps the latest test result for each connection. On failure, it may
+save and display the provider's redacted message, error code, and HTTP status.
+Review those details before sharing them. Local does not keep the test prompt
+or raw provider stream in the result.
 
 Local execution hosts resolve repository-pinned `codex`, `pi`, and
 `claude` commands from `node_modules/.bin` before falling back to PATH. When a
@@ -108,8 +109,5 @@ Local handles the two kinds of settings differently for portable workflows:
   current `.env` for the effect adapters. A missing secret fails the attempt,
   not registration. Marking a value as secret does not encrypt the `.env` file.
 
-The server exposes its runtime profile through `/api/v1/ui-configuration`, so
-the same compiled frontend can be reused by different hosts. Set
-`AGENT_EXECUTION_UI_PROFILE=platform` only when intentionally running the full
-local Platform host. A UI profile changes route composition and presentation;
-it is not an authorization mechanism.
+The Local UI reads `/api/v1/ui-configuration` to decide which screens to show.
+This setting changes what you see, not what you have permission to do.

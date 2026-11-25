@@ -37,7 +37,7 @@ automatic framework translation, or migration of in-flight executions. A wait
 for input does not mean zero storage cost or a promise that an external provider
 will behave unchanged indefinitely.
 
-Managed Cloud, Publisher commerce and maintained customer-cloud deployment are
-not offered by this Local pack. There is no implied hosting, maintenance,
-compatibility, certification, warranty, support response time or SLA for a future
-service. Any such service needs separately agreed terms.
+ArkiMux Local does not include hosting, a service for selling workflows, or
+maintenance of a deployment in your cloud account. If you purchase a separate
+service, its terms govern maintenance, compatibility, certification, warranties
+and support response times.

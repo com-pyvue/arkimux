@@ -14,6 +14,16 @@ Metrics pass the shared validator, including Claude native-tool counts on failur
 
 These checks do not call a provider, read user sessions, prove installed upstream
 CLI compatibility, or prove whole-workflow replay and Results API persistence.
-Native session values are synthetic. The separate live harness requires explicit
-quota approval and exact installed runtime/model observations. Missing or skipped
-live cases never become passing through the offline suite.
+Native session values are synthetic. A passing offline test is not a live result.
+
+To run the [live suite](vitest.live.config.ts), get explicit approval to spend
+provider quota first. Copy the [example case file](live/cases.example.json)
+outside the repository. Set the installed CLI path and exact version, the model
+you intend to call, and your evidence directory. Supply the credential through
+the environment variable named in the case file, not in the JSON. From the
+repository root, with dependencies installed, run:
+
+```sh
+ARKIMUX_PROVIDER_CONFORMANCE_CASES_FILE=/absolute/path/to/your-cases.json \
+  ./node_modules/.bin/vitest run --config test/provider-conformance/vitest.live.config.ts
+```

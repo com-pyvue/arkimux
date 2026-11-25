@@ -7,14 +7,13 @@ When ArkiMux itself fails, Local shows a short message rather than exposing the 
 
 ## What you see
 
-- Preserve a provider's selected error message, code and HTTP status. Keep its
-  formatting, option lists, public links and request identifiers.
-- Local strips terminal control sequences but keeps ordinary explanations that
-  mention a key, token, path, payload or model.
-- Select explicit error events, not unrelated assistant output or entire
-  request/response objects. Existing process and response-size guards still apply.
-- Unknown ArkiMux exceptions become a short, authored message. Do not publish
-  their stack, host paths, raw exception objects or arbitrary `Error.message`.
+- For a provider failure, Local shows the provider’s redacted explanation and,
+  when available, its error code and HTTP status. The explanation can include
+  suggested options, public links and request IDs, but not terminal control sequences.
+- The diagnostic comes from the reported error, not unrelated assistant output
+  or the entire request or response.
+- For an unexpected ArkiMux failure, the action shows a short framework message,
+  not the original exception or stack trace.
 - A shortened debugger response points to saved failure evidence containing the
   complete redacted diagnostic. Storage does not silently shorten provider messages.
 
