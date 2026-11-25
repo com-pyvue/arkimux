@@ -98,19 +98,17 @@ does not retain the probe prompt, raw provider stream, temporary artifacts, or
 credential value. A successful probe proves connectivity for that binding at
 that moment, not access to every model in a workflow configuration.
 
-Released Local V2 execution hosts resolve repository-pinned `codex`, `pi`, and
+Local execution hosts resolve repository-pinned `codex`, `pi`, and
 `claude` commands from `node_modules/.bin` before falling back to PATH. When a
 provider runtime declares an exact required version, preflight rejects a
 mismatched binary before a run is created.
 
-Kimi adapter code is hidden experimental groundwork. Released catalogs,
-templates, session rows, and execution-host profiles do not expose it. Kimi is
-only a future prospect, not a known journey, public compatibility surface, or
-portability promise.
+Kimi is experimental and is not offered as a Local Connection. See the
+[provider compatibility guide](../docs/agent-provider-compatibility.md) for tested configurations.
 
-## Local V2 environment foundation
+## Workflow environment
 
-The new Local candidate requires Node.js 24.0.0 or newer, matching the CLI.
+Local requires Node.js 24.0.0 or newer, matching the CLI.
 `loadLocalWorkflowEnvironment(projectRoot, declaration)` reads only that
 project's `.env` and returns a frozen map containing only declared names.
 It does not change `process.env` or fall back to parent files or shell values.
@@ -122,9 +120,6 @@ Required variables fail before the caller can invoke a workflow. URL variables
 must be absolute HTTP(S) URLs without user information. Errors name the variable
 but never print its value. Reloading requires another explicit load; no file
 watcher is installed. The `secret` flag is metadata, not secure storage.
-
-This helper is tested in isolation. Weather Advisor, start/debug integration,
-and agent-process isolation must still pass the Local V2 journey tests.
 
 The server exposes its runtime profile through `/api/v1/ui-configuration`, so
 the same compiled frontend can be reused by different hosts. Set

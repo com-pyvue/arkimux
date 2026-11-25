@@ -11,7 +11,6 @@ import {
   renderProviderCapabilityMatrix,
   renderProviderEvidenceTable,
   renderProviderExecutionCombinationMatrix,
-  renderProviderGapTable,
   type CapabilityStatus,
   type ProviderExecutionCombination,
   type ProductStatus,
@@ -154,7 +153,7 @@ describe("agent-provider capability manifest", () => {
 });
 
 describe("agent-provider capability document", () => {
-  it("contains the exact generated capability, combination, evidence, and gap tables", async () => {
+  it("contains the exact generated capability, combination, and evidence tables", async () => {
     const document = await readFile(
       path.join(repositoryRoot, "docs/agent-provider-compatibility.md"),
       "utf8",
@@ -163,7 +162,6 @@ describe("agent-provider capability document", () => {
       ["PROVIDER_CAPABILITY_MATRIX", renderProviderCapabilityMatrix()],
       ["PROVIDER_EXECUTION_COMBINATION_MATRIX", renderProviderExecutionCombinationMatrix()],
       ["PROVIDER_EVIDENCE_TABLE", renderProviderEvidenceTable()],
-      ["PROVIDER_GAP_TABLE", renderProviderGapTable()],
     ] as const;
 
     for (const [sectionId, rendered] of generatedSections) {
@@ -176,7 +174,6 @@ describe("agent-provider capability document", () => {
       renderProviderCapabilityMatrix(),
       renderProviderExecutionCombinationMatrix(),
       renderProviderEvidenceTable(),
-      renderProviderGapTable(),
     ]) {
       expect(rendered).not.toContain("<!-- BEGIN GENERATED:");
       expect(rendered).not.toContain("<!-- END GENERATED:");

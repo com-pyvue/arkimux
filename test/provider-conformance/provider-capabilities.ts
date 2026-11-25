@@ -479,7 +479,7 @@ export const providerCapabilities = [
     title: "Model-provider routing",
     description: "Select a provider protocol independently from the execution CLI where supported.",
     providers: {
-      "codex-cli": partial("Accepts arbitrary Codex model_provider configuration, but candidate proof is OpenAI-focused.", ["APC-E001"], ["APC-GAP-001"]),
+      "codex-cli": partial("Accepts arbitrary Codex model_provider configuration, but the adapter tests cover OpenAI.", ["APC-E001"], ["APC-GAP-001"]),
       "pi-cli": supported("Requires an explicit provider and installed text-model catalog entry.", ["APC-E004"]),
       "claude-code-cli": notApplicable("The adapter is fixed to the native Anthropic protocol."),
       "kimi-code-cli": experimental("Supports kimi, anthropic, or openai provider types.", ["APC-E009"]),
@@ -944,7 +944,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "codex-openai-api-key",
     supportStatus: "supported",
     journey: "Local V2 optional; Managed V1; Managed V2 gate",
-    notes: "Managed V1 reference combination and one row of the Managed V2 portability gate. The key is resolved at invocation and injected as OPENAI_API_KEY.",
+    notes: "The key is resolved at invocation and injected as OPENAI_API_KEY.",
     evidenceIds: ["APC-E001", "APC-E013"],
     trackingIds: ["APC-GAP-001"],
   },
@@ -1000,7 +1000,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-anthropic-session",
     supportStatus: "partial",
     journey: "Historical Local V2 revision 6; not a revision 7 requirement",
-    notes: "A native Pi Anthropic request was rejected for third-party extra-usage billing. Revision 7 requires the separate API-key path instead. Existing native records are preserved, not promoted to API-key evidence.",
+    notes: "A native Pi Anthropic request was rejected for third-party extra-usage billing. Use the separate stored-key connection for Pi with Anthropic; a native session is not a substitute for that key.",
     evidenceIds: ["APC-E020"],
     trackingIds: ["APC-GAP-001", "APC-GAP-018"],
   },
@@ -1056,7 +1056,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-kimi-platform-api-key",
     supportStatus: "experimental",
     journey: "Prospect only",
-    notes: "Implementation hooks and presets exist, but Kimi-related portability was removed from known journeys.",
+    notes: "Experimental adapter hooks only; not offered as a Local Connection.",
     evidenceIds: ["APC-E004", "APC-E013"],
     trackingIds: ["APC-GAP-001", "APC-GAP-008"],
   },
@@ -1127,7 +1127,6 @@ function capabilityCell(value: ProviderCapabilityCell): string {
   return markdown([
     `**${statusLabels[value.status]}** — ${value.note}`,
     references("Evidence", value.evidenceIds),
-    references("Tracking", value.trackingIds),
   ].filter(Boolean).join(" "));
 }
 
@@ -1141,10 +1140,10 @@ export function renderProviderCapabilityMatrix(): string {
 }
 
 export function renderProviderExecutionCombinationMatrix(): string {
-  const rows = providerExecutionCombinations.map((combination) => `| \`${combination.combinationId}\` | ${combination.productStatus} | \`${combination.executionProviderId}\` | ${markdown(combination.modelProvider)} | ${combination.authenticationKind}; ${authenticationReferenceLabels[combination.authenticationReferenceKind]}: \`${combination.authenticationReference}\` | ${statusLabels[combination.supportStatus]} | ${markdown(combination.journey)} | ${markdown(combination.notes)} | ${markdown(references("Evidence", combination.evidenceIds) || "—")} | ${markdown(references("Tracking", combination.trackingIds) || "—")} |`);
+  const rows = providerExecutionCombinations.map((combination) => `| \`${combination.combinationId}\` | \`${combination.executionProviderId}\` | ${markdown(combination.modelProvider)} | ${combination.authenticationKind}; ${authenticationReferenceLabels[combination.authenticationReferenceKind]}: \`${combination.authenticationReference}\` | ${statusLabels[combination.supportStatus]} | ${markdown(combination.notes)} | ${markdown(references("Evidence", combination.evidenceIds) || "—")} |`);
   return [
-    "| Combination | Product status | Execution provider | Model provider | Authentication target | Wrapper support | Journey | Notes | Evidence | Tracking |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Combination | Execution provider | Model provider | Authentication target | Wrapper support | Notes | Tests |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n") + "\n";
 }
@@ -1154,15 +1153,6 @@ export function renderProviderEvidenceTable(): string {
   return [
     "| Evidence ID | Level | Providers | Test file | Test name | What it proves |",
     "| --- | --- | --- | --- | --- | --- |",
-    ...rows,
-  ].join("\n") + "\n";
-}
-
-export function renderProviderGapTable(): string {
-  const rows = providerGaps.map((gap) => `| \`${gap.trackingId}\` | ${markdown(gap.title)} | ${gap.status} | ${gap.affectedProviderIds.map((providerId) => `\`${providerId}\``).join(", ")} | ${markdown(gap.description)} |`);
-  return [
-    "| Tracking ID | Gap | Status | Providers | Current meaning |",
-    "| --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n") + "\n";
 }

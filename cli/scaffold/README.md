@@ -11,7 +11,6 @@ This self-contained ArkiMux project includes two workflows:
 The workflows are yours to edit. No Platform checkout is needed.
 
 Requires Node.js >=24.0.0 and npm 10.9.3. All dependencies are pinned.
-This is a private candidate, not a public release.
 
 ## Configure and start
 
@@ -152,4 +151,3 @@ This stops only this project's server. Run data stays under ignored
 
 Run `npm run validate` after edits. It typechecks, checks the project package and
 registry structure, and runs deterministic tests without provider calls.
-Broader public extension validation and release checks are tracked separately.

@@ -4,7 +4,9 @@ import { readFile } from "node:fs/promises";
 
 const root = new URL("../../", import.meta.url);
 const docs = ["README.md", "GENERATED_PROJECTS.md", "THIRD_PARTY_NOTICES.md",
-  "docs/legal/README.md", "docs/legal/LICENSE-AND-NOTICES.md",
+  "bootstrap/README.md", "cli/README.md", "cli/scaffold/README.md", "local/README.md",
+  "docs/agent-provider-compatibility.md", "docs/durable-workflow-engine.md", "docs/error-diagnostics.md",
+  "test/provider-conformance/README.md", "docs/legal/README.md", "docs/legal/LICENSE-AND-NOTICES.md",
   "docs/legal/RESPONSIBILITY-MATRIX.md", "docs/legal/PRIVACY-NOTICE.md",
   "docs/legal/SUPPORT-AND-LIFECYCLE.md", "SECURITY.md", "CONTRIBUTING.md", "TRADEMARKS.md"];
 const read = file => readFile(new URL(file, root), "utf8");
@@ -12,11 +14,25 @@ const read = file => readFile(new URL(file, root), "utf8");
 test("public guidance has working local links and no internal review notes", async () => {
   for (const file of docs) {
     const text = await read(file);
-    assert.doesNotMatch(text, /draft (?:proposal )?for owner review|decisions still needed|dev-3 walkthrough|per-artifact legal approval/i, file);
+    assert.doesNotMatch(text, /draft (?:proposal )?for owner review|decisions still needed|dev-3 walkthrough|per-artifact legal approval|journey:local-v2:|this is a private candidate|dirty-worktree inventory|in this review branch/i, file);
     assert.doesNotMatch(text, /\/Users\/|arkimux-platform|roadmap\/|ACCEPT-\d/, file);
     for (const [, target] of text.matchAll(/\]\(([^)]+)\)/g)) {
       if (/^(?:https?:\/\/|mailto:|#)/.test(target)) continue;
       await readFile(new URL(target.split("#")[0], new URL(file, root)));
+    }
+  }
+});
+
+test("documented npm scripts exist in the project where the reader runs them", async () => {
+  for (const [manifest, files] of [
+    ["cli/scaffold/package.json", ["cli/scaffold/README.md", "cli/README.md"]],
+    ["package.json", ["README.md", "docs/agent-provider-compatibility.md", "test/provider-conformance/README.md"]],
+  ]) {
+    const { scripts } = JSON.parse(await read(manifest));
+    for (const file of files) {
+      for (const [, name] of (await read(file)).matchAll(/\bnpm run\s+([\w:-]+)/g)) {
+        assert.ok(Object.hasOwn(scripts, name), `${file}: npm run ${name} is missing from ${manifest}`);
+      }
     }
   }
 });
