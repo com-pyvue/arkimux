@@ -1,12 +1,6 @@
 # Local rights and responsibilities
 
-Draft for owner review, prepared 5 November 2026. These documents describe the
-Local source candidate, not an accepted public product release or an offer of
-Managed services. No external legal review is claimed. Publication and the
-effective date of a final privacy notice remain separate decisions. The DCO
-contribution policy is adopted; other policy proposals remain under review.
-
-## Read the pack
+These documents cover ArkiMux Local, which runs on your computer. They do not cover Managed hosting.
 
 | Document | What it covers |
 | --- | --- |
@@ -16,10 +10,10 @@ contribution policy is adopted; other policy proposals remain under review.
 | [Generated project rights](../../GENERATED_PROJECTS.md) | Your application and additions versus ArkiMux and third-party content |
 | [Responsibilities](RESPONSIBILITY-MATRIX.md) | Who operates Local, pays providers and reviews workflow behavior |
 | [Privacy notice](PRIVACY-NOTICE.md) | Local data, optional usage sharing, diagnostics and deletion |
-| [Support and lifecycle](SUPPORT-AND-LIFECYCLE.md) | Proposed support, compatibility and update policy |
+| [Support and lifecycle](SUPPORT-AND-LIFECYCLE.md) | Where to get help and how to approach upgrades |
 | [Security reporting](../../SECURITY.md) | Safe reporting and current Local security limits |
 | [Contributing](../../CONTRIBUTING.md) | Adopted DCO 1.1 contribution policy, without an additional CLA |
-| [Trademarks](../../TRADEMARKS.md) | Proposed name/logo policy, separate from the code licence |
+| [ArkiMux name and logo](../../TRADEMARKS.md) | How to use the name and logo without asking permission |
 
 ## Scope and precedence
 
@@ -35,28 +29,16 @@ website copy, contribution procedures and trademark guidance do not narrow the
 Apache rights already granted. The Apache warranty, liability and patent terms
 remain as written, including their qualifications and exceptions.
 
-This pack covers this repository. It does not turn private deployment services
-or unrelated repositories into Apache components, and it does not certify the
-contents of a future npm archive. A separate distribution needs its own exact
-source, dependency and notice checks.
+## Where to get help
 
-## Decisions still needed
-
-Pyvue LLC is the operator. The monitored privacy contact is <privacy@arkimux.ai>;
-the [security reporting channel](../../SECURITY.md) is for vulnerabilities.
-Before publishing the final privacy notice, confirm the production recipient
-and retention policy, relevant jurisdictions and transfer safeguards, handling
-and retention of privacy correspondence, and the effective date. The sandbox
-archive is not a production retention decision.
-
-The trademark owner and the proposed support and trademark policies still need
-owner confirmation. Naming the operator does not settle trademark ownership.
-Whether to obtain external legal review will be decided separately.
+Pyvue LLC operates ArkiMux. Send privacy requests to <privacy@arkimux.ai>,
+report vulnerabilities through [private security reporting](../../SECURITY.md),
+and use [GitHub Issues](https://github.com/com-pyvue/arkimux/issues) for
+best-effort community support.
 
 ## Primary references
 
-The drafts use the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0),
-the [Apache licensing FAQ](https://www.apache.org/foundation/license-faq.html),
-and, for the adopted contribution policy, the
+See the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0),
+the [Apache licensing FAQ](https://www.apache.org/foundation/license-faq.html), and the
 [Developer Certificate of Origin 1.1](https://developercertificate.org/).
 The Apache Software Foundation and Linux Foundation do not endorse ArkiMux.

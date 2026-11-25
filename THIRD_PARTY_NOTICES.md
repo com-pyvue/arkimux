@@ -4,13 +4,7 @@ ArkiMux-authored source uses Apache-2.0 unless stated otherwise. Dependencies re
 
 This inventory comes from the checked-in npm lockfile and includes development, test and optional platform packages, not just code shipped in an artifact. Licence texts present in installed packages are preserved under `licenses/third-party/`. Platform-specific packages not installed on this machine retain the licence declaration from the lockfile and the exact package URL in [the machine-readable inventory](licenses/dependency-inventory.json).
 
-This source review is not a per-package redistribution or legal approval. Before a binary or npm release, verify the exact bundled dependency closure and carry its required notices and source availability information. In particular, the lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components and CC-BY-4.0 data; their own terms remain applicable.
-
-Regenerate with Node.js 24 or newer after `npm ci`:
-
-```sh
-node scripts/generate-third-party-notices.mjs
-```
+The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components and CC-BY-4.0 data; their own terms remain applicable.
 
 | Package | Version | Declared licence | Included notices |
 | --- | --- | --- | --- |

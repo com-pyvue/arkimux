@@ -1,8 +1,6 @@
 # Contributing to ArkiMux Local
 
-Contribution policy adopted 5 November 2026. New public contributions use DCO 1.1
-sign-off, without an additional CLA. Other Local responsibility documents remain
-under review. Existing history is not rewritten or retrospectively certified.
+Sign off new public contributions under DCO 1.1. No additional CLA is required.
 
 ## Prepare a change
 
@@ -77,15 +75,8 @@ history. Missing/malformed sign-offs or missing author/co-author certifications
 fail it. There is no blanket bot or merge-commit exemption. GitHub's temporary
 test-merge commit is not the PR head and is not checked.
 
-The check validates the recorded certification, not legal ownership or personal
-identity. Maintainers still review contributions. The trusted base checker reads
-Git objects without checking out or executing contributor code. It uses read-only
-permissions and needs no extra app or account.
-
-The workflow uses `pull_request` so its result belongs to the PR. Changes to the
-workflow itself are part of the proposed contribution and must be reviewed by
-maintainers; base-script checkout does not prevent a PR from editing workflow
-YAML. Fork workflows may need GitHub's normal maintainer approval before running.
+The check validates the recorded sign-off, not legal ownership or personal identity.
+Fork workflows may need maintainer approval before GitHub runs them.
 
 Local check:
 
@@ -93,11 +84,7 @@ Local check:
 node scripts/check-dco.mjs --base <full-base-commit-id> --head <full-head-commit-id>
 ```
 
-The workflow becomes available after publication in the target branch. Repository
-owners must then make the status check named `DCO` required in protected-branch
-or ruleset settings. Source files alone do not activate that merge restriction.
-Preserve sign-offs when merging or squashing, and review changes to the checker.
-A future merge queue needs its own event wiring before using this PR-only check.
+Preserve sign-offs when merging or squashing commits.
 
 Changes to the root `LICENSE` or `NOTICE` require repository owner review.
 Propose legitimate updates by pull request and explain the reason. The owner

@@ -8,6 +8,6 @@ Managed hosting and its cloud deployment services are separate. Original errors 
 
 ## Source status
 
-The public Local source is maintained on `main`; this is not a tagged or accepted product release. npm publication and final release checks remain pending. The [Local rights and responsibility documents](docs/legal/README.md) are drafts for owner review; whether to obtain external legal review is a separate decision.
+The `main` branch contains the Local source, not a tagged stable release. See [Local rights and responsibilities](docs/legal/README.md) for licensing, privacy, support, and security reporting.
 
 ArkiMux-authored source is licensed under [Apache-2.0](LICENSE), unless stated otherwise. Third-party components retain their own terms; see [notices](NOTICE), [dependency notices](THIRD_PARTY_NOTICES.md) and [generated project rights](GENERATED_PROJECTS.md).

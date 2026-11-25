@@ -1,13 +1,11 @@
 # Local privacy notice
 
-Draft for owner review, updated 25 November 2026. This describes the Local
-candidate, not a live production telemetry service. No effective date has been
-set. In Local, Settings → Privacy shows the recipient and notice version that
-apply to your installation.
-
 **Pyvue LLC operates ArkiMux** and decides why and how optional Local usage
 data is used. For privacy questions, requests or complaints, email
 <privacy@arkimux.ai>. You do not need an ArkiMux account to contact us.
+
+This is a preview notice, not a production notice in effect. In Local, open
+**Settings → Privacy** to see the recipient and notice version for your installation.
 
 ## Data used to run your workflows
 
@@ -52,11 +50,9 @@ The Local API/runtime sends these coded event groups to the ArkiMux Telemetry
 Service on AWS: consent granted, Local started, connection created or tested,
 configuration saved, Run started/completed/failed/cancelled, and successful
 result-payload fetch. A fetch is not evidence that a person viewed the result.
-AWS hosts the telemetry service for Pyvue LLC. The reviewed configuration
-stores telemetry in Ireland (AWS region `eu-west-1`). The storage region
-alone does not tell you where support access or other processing takes place.
-Production recipients, any international transfers and applicable safeguards
-must be confirmed and disclosed before a production notice takes effect.
+AWS hosts the telemetry service for Pyvue LLC. The preview service stores
+telemetry in Ireland (AWS region `eu-west-1`). This is the storage location,
+not a guarantee that all support access or other processing takes place there.
 Event occurrence times can measure elapsed journey time across restarts and
 pauses, not hands-on work time.
 
@@ -71,25 +67,35 @@ address is not a field in the analytics event schema.
 
 ## Delivery and retention
 
-For the **installation-retention-180d-v1** notice, linked events are kept
-while the installation remains active and you consent. Sharing ends when you
-withdraw or reach the service's inactivity cutoff (at most 180 consecutive
-inactive days). This is not a 180-day limit on the age of each event.
-Opening Local, retrying uploads
-or refreshing credentials does not extend consent. Connection creation or
-testing, configuration saves (including failed setup/test attempts), Run starts
-and successful result fetches count. Failed attempts send a code, not error
-text. This format does not send a journey ID. The old installation ID cannot
-resume sharing; returning requires a fresh Yes and a new, unlinked installation
-ID. This notice does not authorize keeping an archive of those events.
-The separate **dev-sandbox-archive-v1** notice is for an explicitly designated dev walkthrough, not production. A fresh Yes authorizes retaining coded usage after withdrawal or five inactive minutes. The original rows are deleted. The archive keeps the cohort month, ordered steps, operation pairings and relative times under one random key, without original IDs or exact timestamps. It has no automatic expiry and cannot be deleted by installation ID. Prior consent does not opt you in.
+Match the version in **Settings → Privacy** to the rule below. The service keeps
+usage events linked to your installation while sharing is active. When sharing
+ends, it deletes the original events. What remains depends on the notice you accepted.
+
+| Notice version | When sharing ends | What remains of your usage events |
+| --- | --- | --- |
+| `installation-retention-180d-v1` | When you stop sharing or reach the service’s inactivity cutoff (at most 180 consecutive days) | No archive. This is an inactivity limit, not a limit on the age of individual events while sharing is active. |
+| `dev-sandbox-archive-v1` (designated sandbox installations only) | When you stop sharing or after five inactive minutes | Only with a fresh Yes to this notice: month, ordered steps, operation pairings and relative times under a random installation key. No original IDs or exact timestamps. |
+| `usage-with-withdrawal-archive-v1-disclosed` (earlier archive notice) | When you stop sharing; no inactivity cutoff | Only with a fresh Yes to this notice: consent month, ordered steps, journey-local operation numbers, relative times and a timing-validity flag under a random journey key. No original IDs, exact timestamps or build version. |
+| `usage-only-withdrawal-v1` | When you stop sharing; no inactivity cutoff | No archive. |
+
+For the two notices with an inactivity cutoff, creating or testing a connection,
+saving a configuration (including failed attempts), starting a Run, or fetching
+a result successfully counts as activity. Failed attempts send a code, not error
+text. Opening Local, retrying an upload, or refreshing credentials does not count.
+After expiry, sharing requires a fresh Yes and a new, unlinked installation ID.
+
+Both archives keep the reduced history indefinitely. Once the link is removed,
+we cannot look up or delete an archived sequence by installation ID. Removing
+identifiers does not by itself make a distinctive sequence anonymous. Consent
+to one notice does not opt you into another.
+
+### Other records
 
 | Data | Current handling |
 | --- | --- |
 | Pending usage | Shared OS-user storage, bounded to 100 events per project and seven days; temporary failures retry with stable event IDs |
-| Uploaded usage under earlier notices without an inactivity cutoff | No automatic expiry; source records are kept until withdrawal. This is not the rule for the installation-retention or dev-sandbox notice above. |
 | Query-result files | Become eligible for expiry seven days after each file's creation, rounded to midnight UTC; AWS removal is asynchronous and can take longer |
-| Service/security logs | Current approved configuration uses seven-day retention |
+| Service/security logs | Seven days in the preview service |
 | Delivery and failed-delivery queues | Seven-day retention |
 | Privacy history | Retained locally, including known consent decisions, installation IDs and deletion receipts; not uploaded |
 | Original error diagnostics | Local only: at most 20 records, each at most 256 KiB, pruned after seven days when Local records or accesses diagnostics |
@@ -97,8 +103,7 @@ The separate **dev-sandbox-archive-v1** notice is for an explicitly designated d
 The installed Privacy page shows its recipient configuration and delivery state.
 An unconfigured recipient cannot receive telemetry. Delivery can fail or events
 can expire or be dropped at the bounds; consent is not a delivery guarantee.
-Retention values for a different approved recipient must be disclosed in its
-configured notice rather than inferred from this draft.
+For a different recipient, check the retention shown in Settings → Privacy.
 
 ## Stop sharing and delete uploaded usage
 
@@ -107,8 +112,8 @@ Before sharing, choose **Share usage** or **Do not share**. When already sharing
 clears unsent usage and requests authenticated withdrawal. Earlier clients label
 this action **Delete shared data**. After stopping, the Privacy page shows a
 separate deletion action only for earlier linked data not yet requested for
-withdrawal. An in-flight
-upload cannot be recalled. Local retries offline requests without renewed
+withdrawal. An in-flight upload cannot be recalled.
+Local retries offline requests without renewed
 consent. The service removes the installation's source data and catalog entries
 within seven days. An accepted request is not confirmation of removal. Local
 keeps the credential to follow up until the service confirms completion.
@@ -119,15 +124,6 @@ because you chose Yes. Requests go only to the original recipient.
 Minimal deletion records remain to reject old uploads; privacy history stays
 on this computer. Older versions that already discarded a credential cannot
 recover it from the installation ID alone.
-
-The earlier dev-3 walkthrough used a different archive notice. A fresh Yes
-under that notice allowed a reduced journey to be kept indefinitely after withdrawal: consent month, ordered
-event kinds, journey-local operation numbers and relative timing with a validity
-flag, under a new random journey key. Original IDs, exact dates/times and build
-version are removed. After conversion, the archive cannot be deleted by
-installation ID. That permission does not carry over to another notice. Replacing
-identifiers with random journey keys and keeping relative timing would not, by
-itself, make a distinctive sequence anonymous.
 
 Existing query-result files are not purged by that action and expire on the
 file-age basis above. In-flight queries are not cancelled; downloaded reports
@@ -141,6 +137,10 @@ a private contact, not a public GitHub issue. Google Workspace handles the email
 for Pyvue LLC; your sender address and the message you choose to send are
 visible to us so we can respond. Please do not send passwords, posting
 credentials, workflow content or diagnostic files.
+
+We keep privacy correspondence while we handle your request and any follow-up.
+Once it is no longer needed, we delete it, unless we need to keep it to meet a
+legal obligation or resolve a dispute.
 
 Depending on the law that applies to you, you may ask to access, correct,
 delete or receive a portable copy of your data, restrict its use or object to
@@ -178,6 +178,3 @@ study records remain local and require an explicitly observed session; ordinary
 usage events are not proof of a complete measured session.
 
 This notice does not authorize website analytics or interest-form contact.
-Those surfaces need their own declared fields, recipients, purpose and retention
-before real submissions. A private preview must use isolated synthetic test
-records, not collect real leads under this Local choice.

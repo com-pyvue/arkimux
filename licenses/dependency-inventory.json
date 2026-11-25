@@ -1,5 +1,5 @@
 {
-  "scope": "Public source workspace lockfile, including build/test and optional platform dependencies. Not a per-artifact legal approval.",
+  "scope": "Dependencies in the source lockfile, including development, test and optional packages. A distribution may include only a subset.",
   "lockfileSha256": "d680dff7d408f09cc7adc80fc8b87c6314619dbf2656228264211d8455854461",
   "packages": [
     {
