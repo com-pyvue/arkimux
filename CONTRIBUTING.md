@@ -20,6 +20,10 @@ and follow [SECURITY.md](SECURITY.md). Do not disclose vulnerabilities in public
 
 ## Licence and certification
 
+When updating dependencies, run `npm ci` from the repository root, then
+`node scripts/generate-third-party-notices.mjs`. Review the resulting changes
+to `THIRD_PARTY_NOTICES.md` and `licenses/` along with the lockfile change.
+
 Contributions intentionally submitted for inclusion are covered by the contribution
 terms in [Apache-2.0](LICENSE), unless an applicable separate agreement says
 otherwise. Only submit material you have the right to contribute, including

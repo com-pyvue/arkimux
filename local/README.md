@@ -14,8 +14,8 @@ only this project's server.
 
 ## Migrate an older project
 
-If Local reports legacy storage or the project uses V1 combined authentication
-providers, stop its server and run the pinned CLI from the project root:
+If Local tells you to run `arkimux local migrate`, stop the project's server
+and run its pinned CLI from the project root:
 
 ```sh
 npm run dev:stop

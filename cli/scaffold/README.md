@@ -46,7 +46,7 @@ npm run weather:result -- --run <execution-id>
 ```
 
 Weather Advisor is a declared graph: Read weather → Recommend clothing →
-Critique clothing → Assemble result. Open its **Workflow diagram** to inspect
+Critique clothing → Assemble result. Use the diagram under **Workflow** to inspect
 the same nodes and dependencies used by execution. The final node only assembles
 the result; there are still one weather request and two agent operations.
 `weather:run` supplies the city to the default graph entry. The Local UI also

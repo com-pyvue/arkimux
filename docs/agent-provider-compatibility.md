@@ -89,7 +89,7 @@ provider stops work or billing. For a failed call, use `failureCode` to distingu
 code is not a detailed classification of provider-specific errors.
 
 <!-- BEGIN GENERATED:PROVIDER_CAPABILITY_MATRIX -->
-| Capability | Codex CLI | Pi CLI | Claude Code CLI | Kimi Code CLI |
+| Capability | Codex CLI | Pi CLI | Claude Code CLI | Kimi Code CLI (experimental; not offered in Local) |
 | --- | --- | --- | --- | --- |
 | **Input / Single text prompt**<br>`single-text-prompt` | **Supported** — Delivered through stdin. Evidence: `APC-E001`, `APC-E018`. | **Supported** — Delivered through stdin. Evidence: `APC-E004`, `APC-E018`. | **Supported** — Delivered through stdin. Evidence: `APC-E007`, `APC-E018`. | **Experimental** — Delivered through an isolated prompt file. Evidence: `APC-E009`, `APC-E018`. |
 | **Input / Working directory**<br>`working-directory` | **Supported** — Child process uses request.cwd. Evidence: `APC-E001`. | **Supported** — Child process uses request.cwd. Evidence: `APC-E004`. | **Supported** — Child process uses request.cwd. Evidence: `APC-E007`. | **Experimental** — Child process uses request.cwd. Evidence: `APC-E009`. |

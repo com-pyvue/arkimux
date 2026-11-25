@@ -53,13 +53,14 @@ result-payload fetch. A fetch is not evidence that a person viewed the result.
 AWS hosts the telemetry service for Pyvue LLC. The preview service stores
 telemetry in Ireland (AWS region `eu-west-1`). This is the storage location,
 not a guarantee that all support access or other processing takes place there.
-Event occurrence times can measure elapsed journey time across restarts and
-pauses, not hands-on work time.
+We use event times to measure the time between recorded steps. This includes
+pauses and restarts; it does not tell us how long you were actively working.
 
 The allowed fields are schema version, random event and installation IDs,
 event kind, occurrence and send timestamps, ArkiMux version and, where needed,
-an opaque operation ID. The older event format also includes a consent-journey
-ID; the installation-retention and dev-sandbox formats do not. The service adds
+an opaque operation ID. Older events also carry an ID that groups events from
+the same period of consent. Events sent under `installation-retention-180d-v1`
+and `dev-sandbox-archive-v1` do not include that ID. The service adds
 receipt time. Usage events do not contain workflow source, inputs, prompts,
 outputs, Run IDs, absolute paths, provider error content, credentials, human
 identity or hosted ArkiMux account identity.
@@ -75,8 +76,8 @@ ends, it deletes the original events. What remains depends on the notice you acc
 | Notice version | When sharing ends | What remains of your usage events |
 | --- | --- | --- |
 | `installation-retention-180d-v1` | When you stop sharing or reach the service’s inactivity cutoff (at most 180 consecutive days) | No archive. This is an inactivity limit, not a limit on the age of individual events while sharing is active. |
-| `dev-sandbox-archive-v1` (designated sandbox installations only) | When you stop sharing or after five inactive minutes | Only with a fresh Yes to this notice: month, ordered steps, operation pairings and relative times under a random installation key. No original IDs or exact timestamps. |
-| `usage-with-withdrawal-archive-v1-disclosed` (earlier archive notice) | When you stop sharing; no inactivity cutoff | Only with a fresh Yes to this notice: consent month, ordered steps, journey-local operation numbers, relative times and a timing-validity flag under a random journey key. No original IDs, exact timestamps or build version. |
+| `dev-sandbox-archive-v1` (designated sandbox installations only) | When you stop sharing or after five inactive minutes | Only with a fresh Yes to this notice: the month, the order and relative timing of steps, and which steps belong to the same operation. A new random ID groups the steps from that installation. No original IDs or exact timestamps. |
+| `usage-with-withdrawal-archive-v1-disclosed` (earlier archive notice) | When you stop sharing; no inactivity cutoff | Only with a fresh Yes to this notice: the month you consented, the order and relative timing of steps, and whether the timing is valid. A new random ID groups the steps in each sequence; numbers within that sequence mark steps from the same operation. No original IDs, exact timestamps or build version. |
 | `usage-only-withdrawal-v1` | When you stop sharing; no inactivity cutoff | No archive. |
 
 For the two notices with an inactivity cutoff, creating or testing a connection,
@@ -85,7 +86,8 @@ a result successfully counts as activity. Failed attempts send a code, not error
 text. Opening Local, retrying an upload, or refreshing credentials does not count.
 After expiry, sharing requires a fresh Yes and a new, unlinked installation ID.
 
-Both archives keep the reduced history indefinitely. Once the link is removed,
+Only `dev-sandbox-archive-v1` and `usage-with-withdrawal-archive-v1-disclosed`
+keep the reduced history indefinitely. Once the link is removed,
 we cannot look up or delete an archived sequence by installation ID. Removing
 identifiers does not by itself make a distinctive sequence anonymous. Consent
 to one notice does not opt you into another.
@@ -165,7 +167,7 @@ of that choice. They may contain private messages, paths or other sensitive
 details; do not assume that a diagnostic is safe to publish.
 
 Diagnostics lets you inspect, download or explicitly copy the displayed record.
-Copying is not submission. Report an issue opens a GitHub form with the framework
+Copying is not submission. **Report an issue on GitHub** opens a form with the framework
 version and blank prompts; no trace, diagnostic ID or file is attached. Review
 and redact any material before you submit it. GitHub issues are public and use
 GitHub's own policies. Deleting a local record or requesting telemetry deletion

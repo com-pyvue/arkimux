@@ -5,8 +5,8 @@ for adapter features, authentication modes and the limits of each kind of test.
 The suite is covered by the [suite licence](LICENSE); dependencies retain their own terms.
 
 Run offline tests from the repository root with `npm run test:provider-contract`.
-`contract/local-v2-connections.contract.test.ts` exercises the four Local V2
-Connection modes using real ArkiMux authentication adapters and synthetic CLIs:
+`contract/local-v2-connections.contract.test.ts` exercises four Local
+connection modes using real ArkiMux authentication adapters and synthetic CLIs:
 Codex native, Pi Codex native, Pi Anthropic stored key, and Claude native.
 Each gets completion, failure, cancellation and timeout checks; the Pi key path
 must not fall back to a native session. All results use one controlled schema.

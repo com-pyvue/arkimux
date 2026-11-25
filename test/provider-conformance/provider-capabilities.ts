@@ -1106,7 +1106,7 @@ const providerLabels: Record<ProviderId, string> = {
   "codex-cli": "Codex CLI",
   "pi-cli": "Pi CLI",
   "claude-code-cli": "Claude Code CLI",
-  "kimi-code-cli": "Kimi Code CLI",
+  "kimi-code-cli": "Kimi Code CLI (experimental; not offered in Local)",
 };
 
 const authenticationReferenceLabels: Record<

@@ -4,7 +4,7 @@ ArkiMux-authored source uses Apache-2.0 unless stated otherwise. Dependencies re
 
 This inventory comes from the checked-in npm lockfile and includes development, test and optional platform packages, not just code shipped in an artifact. Licence texts present in installed packages are preserved under `licenses/third-party/`. Where no licence file is listed, see [the machine-readable inventory](licenses/dependency-inventory.json) for the package URL if available. For bundled dependencies, use the containing package archive linked below.
 
-The lockfile includes EPL-2.0-or-GPL-3.0-or-later `elkjs`, MPL-2.0 components and CC-BY-4.0 data; their own terms remain applicable.
+The lockfile includes `elkjs` (`EPL-2.0 OR GPL-3.0-or-later`), MPL-2.0 components and CC-BY-4.0 data; their own terms remain applicable.
 
 | Package | Version | Declared licence | Included notices |
 | --- | --- | --- | --- |

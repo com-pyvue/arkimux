@@ -48,7 +48,7 @@ The original record stays on your computer; it can include a stack trace, paths,
 or other private details. Provider and workflow failures are not collected on
 this page. They are reported where the operation failed, such as Connections or a Run.
 
-Copying or downloading a diagnostic does not send it anywhere. **Report an issue**
+Copying or downloading a diagnostic does not send it anywhere. **Report an issue on GitHub**
 opens a public GitHub form without attaching the record. If you choose to share
 details, remove credentials, private paths, workflow content, and anything else
 you do not want to publish. For retention, deletion, and usage sharing, see the

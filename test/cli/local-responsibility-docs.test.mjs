@@ -92,8 +92,8 @@ test("privacy and contributor docs disclose Local limits and contribution terms"
   }
   for (const [version, rule] of [
     ["installation-retention-180d-v1", /180 consecutive days.*No archive/],
-    ["dev-sandbox-archive-v1", /five inactive minutes.*fresh Yes.*random installation key/],
-    ["usage-with-withdrawal-archive-v1-disclosed", /no inactivity cutoff.*fresh Yes.*random journey key/],
+    ["dev-sandbox-archive-v1", /five inactive minutes.*fresh Yes.*random ID groups the steps from that installation/],
+    ["usage-with-withdrawal-archive-v1-disclosed", /no inactivity cutoff.*fresh Yes.*random ID groups the steps in each sequence/],
     ["usage-only-withdrawal-v1", /no inactivity cutoff.*No archive/],
   ]) {
     const row = privacy.split("\n").find(line => line.startsWith("| `" + version + "`"));
