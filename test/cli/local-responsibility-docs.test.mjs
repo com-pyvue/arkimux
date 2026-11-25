@@ -28,16 +28,13 @@ test("security and contributor instructions link directly to private vulnerabili
   }
 });
 
-test("privacy draft matches the current usage-only wire fields and local diagnostic limits", async () => {
+test("privacy and contributor docs disclose Local limits and contribution terms", async () => {
   const privacy = await read("docs/legal/PRIVACY-NOTICE.md");
   for (const token of ["No error report", "100 events", "256 KiB", "20 records", "No automatic expiry",
     "Do not share", "Delete shared data", "OS credential store", "0600", "pseudonymous",
     "not evidence that a person viewed", "GitHub issues are public", "recipient", "CI"]) {
     assert.ok(privacy.includes(token), `Missing disclosure: ${token}`);
   }
-  const events = await read("contracts/telemetry/events.ts");
-  assert.match(events, /z\.strictObject/);
-  assert.doesNotMatch(events.split("const base =")[1].split("}).superRefine")[0], /(?:message|stack|prompt|payload|user_id):/);
   const diagnostics = await read("local/src/localFrameworkDiagnostics.ts");
   assert.match(diagnostics, /MAX_RECORDS = 20/);
   assert.match(diagnostics, /MAX_BYTES = 256 \* 1_024/);

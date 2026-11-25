@@ -58,6 +58,17 @@ address is not a field in the analytics event schema.
 
 ## Delivery and retention
 
+For the **installation-retention-180d-v1** notice, sharing ends after 180
+consecutive inactive days or when you withdraw. Opening Local, retrying uploads
+or refreshing credentials does not extend consent. Connection creation or
+testing, configuration saves (including failed setup/test attempts), Run starts
+and successful result fetches count. Failed attempts send a code, not error
+text. This format does not send a journey ID. The old installation ID cannot
+resume sharing; returning requires a fresh Yes and a new, unlinked installation
+ID. This notice does not authorize keeping an archive of those events.
+The separate **dev-sandbox-archive-v1** notice is for an explicitly designated dev walkthrough, not production. A fresh Yes authorizes retaining coded usage after withdrawal or five inactive minutes. The original rows are deleted. The archive keeps the cohort month, ordered steps, operation pairings and relative times under one random key, without original IDs or exact timestamps. It has no automatic expiry and cannot be deleted by installation ID. Prior consent does not opt you in.
+The earlier configuration below does not describe that inactivity rule.
+
 | Data | Current handling |
 | --- | --- |
 | Pending usage | Shared OS-user storage, bounded to 100 events per project and seven days; temporary failures retry with stable event IDs |

@@ -12,6 +12,7 @@ interface LocalUsageStatus {
   choice: "undecided" | "accepted" | "declined";
   sharingEnabled: boolean;
   promptEligible: boolean;
+  consentExpired?: boolean;
   privacyNoticeVersion: string;
   provider: { kind: "arkimux"; configured: boolean };
   deliveryState: string;
@@ -22,7 +23,7 @@ interface LocalUsageStatus {
   remoteDeletion: "installation-authenticated";
   hasUnrequestedEarlierWithdrawal?: boolean;
   installationId?: string | null;
-  privacyHistory?: Array<{ id: string; kind: "consent_granted" | "sharing_stopped" | "deletion_requested" | "deletion_accepted" | "deletion_completed";
+  privacyHistory?: Array<{ id: string; kind: "consent_granted" | "consent_expired" | "sharing_stopped" | "deletion_requested" | "deletion_accepted" | "deletion_completed";
     at?: string; installationId?: string; notice?: string; requestId?: string; completionDueAt?: string; recovered?: boolean }>;
   deletionRequest?: { status: "pending" | "accepted"; receipt?: { request_id: string; completion_due_at: string; status: string } } | null;
   privacy: { usageRetentionDays: number | "indefinite"; queryRetentionDays: number;
@@ -31,7 +32,9 @@ interface LocalUsageStatus {
 
 const privacyTermsPath = "/settings/privacy/terms";
 const archiveDisclosure = "When you stop sharing, we delete the original events. For journeys shared under the archive notice, we keep the month, ordered steps, operation pairings and relative timing indefinitely under a new random key. The archive has no installation ID or exact timestamps and cannot be deleted by installation ID.";
+const sandboxArchiveNotice = "dev-sandbox-archive-v1";
 function archiveCopy(status?: LocalUsageStatus) {
+  if (status?.privacyNoticeVersion === sandboxArchiveNotice) return "Dev sandbox only: choosing Yes lets ArkiMux keep your designated installation’s coded usage history after you stop sharing or after five inactive minutes. Original rows are deleted. The archive keeps the month, ordered steps, operation pairings and relative times under a random key, with no installation ID or exact timestamps. It has no automatic expiry and cannot be deleted by your installation ID.";
   return status?.privacyNoticeVersion === "usage-with-withdrawal-archive-v1-disclosed" ? archiveDisclosure : null;
 }
 const bundledNotice = { version: "usage-only-withdrawal-v1", localRetentionDays: 7 } as const;
@@ -53,17 +56,19 @@ export function LocalUsageSharingPrompt(props: LocalUsageProps) {
     aria-labelledby="local-usage-title">
     <DialogHeader><DialogTitle id="local-usage-title">Help improve ArkiMux</DialogTitle></DialogHeader>
     <DialogContent className="space-y-4">
+      {status?.consentExpired && <p>Your usage-sharing choice expired due to inactivity. Sharing is off unless you choose Yes again.</p>}
       <p><strong>Our mission is to help developers go from idea to a running production workflow as fast as possible. Help us improve ArkiMux.</strong></p>
       <p className="text-sm text-muted-foreground">Share Local setup steps and session timing. Error reports stay local. No workflow content, prompts, results, credentials, or personal identity. Sharing is optional and does not affect Local features.</p>
       <p className="text-sm text-muted-foreground">Read the <Link className="underline underline-offset-4" to={privacyTermsPath}>Privacy Notice {status?.privacyNoticeVersion}</Link> before choosing. You can change your choice in Settings.</p>
       {archiveCopy(status) && <p>{archiveCopy(status)}</p>}
+      {status?.privacyNoticeVersion === "installation-retention-180d-v1" && <p>Sharing expires after the service’s inactivity period (up to 180 days). Failed setup and connection tests count as activity; their error text is not sent.</p>}
       {error ? <ErrorNotification description={error} /> : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" onClick={() => void choose("ask-later")}>Ask later</Button>
         {confirmEarlier && status?.hasUnrequestedEarlierWithdrawal
           ? <><p>Declining will also request deletion of the earlier installation’s linked usage.</p><Button variant="outline" onClick={() => setConfirmEarlier(false)}>Cancel</Button><Button onClick={() => void choose("no")}>Confirm deletion</Button></>
           : <Button variant="outline" onClick={() => status?.hasUnrequestedEarlierWithdrawal ? setConfirmEarlier(true) : void choose("no")}>No</Button>}
-        <Button onClick={() => void choose("yes")}>Yes</Button>
+        <Button onClick={() => void choose("yes")}>{status?.privacyNoticeVersion === sandboxArchiveNotice ? "Yes, share and archive sandbox usage" : "Yes"}</Button>
       </div>
     </DialogContent>
   </Dialog>;
@@ -120,7 +125,7 @@ export function LocalPrivacySettings(props: LocalUsageProps) {
           <p className="text-sm text-muted-foreground">Provider: ArkiMux Telemetry Service ({status.provider.configured ? "configured" : "not configured"}). Delivery: {deliveryLabel(status.deliveryState)}. Pending events for this project: {status.pendingEventCount}.</p>
           {status.credentialDeletionPending ? <p role="status">Sharing is stopped for the old identity. Unlock the OS credential store so Local can finish deleting its credential.</p> : null}
           {!(confirmDelete && action) && <div className="flex flex-wrap gap-2">
-            {status.choice !== "accepted" && <Button disabled={status.deletionRequest?.status === "pending"} onClick={() => void choose("yes")}>Share usage</Button>}
+            {status.choice !== "accepted" && <Button disabled={status.deletionRequest?.status === "pending"} onClick={() => void choose("yes")}>{status.privacyNoticeVersion === sandboxArchiveNotice ? "Share and archive sandbox usage" : "Share usage"}</Button>}
             {status.choice === "undecided" && <Button variant="outline" onClick={() => action === "earlier" ? setConfirmTarget(target) : void choose("no")}>Do not share</Button>}
             {action === "stop" && <Button variant="outline" onClick={() => setConfirmTarget(target)}>Stop sharing…</Button>}
             {action === "earlier" && status.choice === "declined" && <Button variant="outline" onClick={() => setConfirmTarget(target)}>Delete earlier shared data…</Button>}
@@ -152,7 +157,7 @@ export function LocalPrivacySettings(props: LocalUsageProps) {
   </main>;
 }
 
-const privacyEventLabels = { consent_granted: "Consent granted", sharing_stopped: "Sharing stopped",
+const privacyEventLabels = { consent_granted: "Consent granted", consent_expired: "Consent expired", sharing_stopped: "Sharing stopped",
   deletion_requested: "Deletion requested", deletion_accepted: "Deletion accepted", deletion_completed: "Deletion completed" } as const;
 
 export function LocalPrivacyTerms(props: LocalUsageProps) {
@@ -166,12 +171,13 @@ export function LocalPrivacyTerms(props: LocalUsageProps) {
     {error ? <ErrorNotification description={`Current server status is unavailable: ${error.message}`} /> : null}
     <Card><CardContent className="space-y-5 pt-6">
       <section className="space-y-2"><h2 className="text-lg font-semibold">Your choice</h2>
+        {status?.privacyNoticeVersion === "installation-retention-180d-v1" && <p>Consent expires at the service’s inactivity cutoff (at most 180 days). Connection creation or testing (including failed attempts), configuration saves (including failures), run starts and successful result fetches count. Opening Local and retrying an upload do not count. The old installation ID is retired. Sharing resumes under a new ID only if you choose Yes again.</p>}
         <p>Local usage sharing is off until you choose Yes or Share usage. One choice covers the allowed signals below across ArkiMux projects in this OS user account. No, Ask later, closing the prompt, and leaving the choice undecided send no usage events and change no Local capability. Ask later records no consent decision and can prompt again after a later Local server start.</p>
         <p>After Yes, Local creates a random registration identity and registers an installation account with ArkiMux's dedicated AWS Cognito pool in the background. Its posting credential stays in the OS credential store, not project files or the browser. The resulting pseudonymous ID connects signals across projects; it is not a MAC address, hardware fingerprint or Managed identity. Choosing No stops collection and clears queued data. Local keeps the credential to request and confirm withdrawal. If the credential store is locked, deletion is retried and shown in Settings.</p>
       </section>
       <section className="space-y-2"><h2 className="text-lg font-semibold">What is shared</h2>
         <p>The recipient is the ArkiMux Telemetry Service hosted on AWS. The Local server sends consent granted, Local started, connection creation/testing, configuration saved, run started/succeeded/failed/cancelled, and result fetched events. A fetch means the API returned a result payload for a successful run; it does not prove human viewing. Browser and CLI clients count equally.</p>
-        <p>Events contain version, event/installation/journey IDs, coded kind, occurrence and send timestamps, and an opaque operation ID where needed. The service adds receipt time. Journey correlation survives restarts and measures consent to the first successful result fetch, including pauses, not hands-on time. Missing events remain missing.</p>
+        <p>Events contain version, event and installation IDs{(status?.privacyNoticeVersion === "installation-retention-180d-v1" || status?.privacyNoticeVersion === sandboxArchiveNotice) ? "" : " (older formats also contain a journey ID)"}, coded kind, occurrence and send timestamps, and an opaque operation ID where needed. The service adds receipt time. Reports measure consent to the first successful result fetch, including pauses, not hands-on time. Missing events remain missing.</p>
       </section>
       <section className="space-y-2"><h2 className="text-lg font-semibold">Local diagnostics and GitHub issues</h2>
         <p>ArkiMux does not collect error reports automatically, even with Share usage enabled. Error messages, stack traces, and diagnostic files stay on this computer. Pending error uploads from older versions are discarded.</p>
@@ -187,7 +193,7 @@ export function LocalPrivacyTerms(props: LocalUsageProps) {
         <p>Each project's outbox holds at most 100 events for {status?.localRetentionDays ?? bundledNotice.localRetentionDays} days under the shared OS-user telemetry directory. Retries use stable event IDs. Delivery is not guaranteed. Choosing No stops new uploads and clears pending events; an in-flight request cannot be recalled. Deleting a Cognito account does not delete uploaded data.</p>
         <p>Privacy history is saved locally in this OS user account, including consent choices, known installation IDs and deletion receipts. It is not uploaded. Stopping sharing or deleting shared data keeps this local history so earlier choices and requests remain visible.</p>
         <p>Stopping sharing requests authenticated withdrawal. If an earlier installation still has linked usage, you can request its deletion from Privacy settings. Local retries offline without renewed consent and retains the credential until removal is confirmed. Acceptance is not confirmation of removal. {archiveCopy(status) ?? "No real usage rows are currently approved for archive retention."} The service deletes the installation's source data and catalog entries within seven days. Existing query-result files may still contain that data and are not deleted by this request. They become eligible for automatic expiration {status?.privacy?.queryRetentionDays ?? 7} days after each file is created, rounded up to the next midnight UTC; AWS removal is asynchronous and may take longer. In-flight queries are not cancelled and their result files expire on the same basis. Queue and dead-letter copies retain at most seven days and cannot restore deleted source data. Minimal request and suppression records remain to reject old uploads; these are not analytics. Previously downloaded reports cannot be recalled.</p>
-        {status?.privacy ? <p>Configured retention: usage {status.privacy.usageRetentionDays === "indefinite" ? "has no automatic expiry" : `${status.privacy.usageRetentionDays} days`}, query results {status.privacy.queryRetentionDays} days, security/service logs {status.privacy.logRetentionDays} days. Deletion: {status.privacy.deletionDescription}</p>
+        {status?.privacy ? <p>Configured retention: usage {status.privacyNoticeVersion === sandboxArchiveNotice ? "until withdrawal or five inactive minutes for the designated sandbox" : status.privacyNoticeVersion === "installation-retention-180d-v1" ? "until withdrawal or the service’s inactivity cutoff (up to 180 days without a qualifying action)" : status.privacy.usageRetentionDays === "indefinite" ? "has no automatic expiry" : `${status.privacy.usageRetentionDays} days`}, query results {status.privacy.queryRetentionDays} days, security/service logs {status.privacy.logRetentionDays} days. Deletion: {status.privacy.deletionDescription}</p>
           : <p>The AWS recipient's retention and deletion policy is not configured. No telemetry can be uploaded until an approved service configuration is supplied and you consent to its notice.</p>}
       </section>
       <section className="space-y-2"><h2 className="text-lg font-semibold">Separate permissions</h2>
