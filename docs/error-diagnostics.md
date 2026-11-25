@@ -37,9 +37,8 @@ the adapter before the error crosses IPC or enters storage.
 `public-workflow-imports@2` permits the diagnostic error/types,
 `getExternalErrorDiagnostic`, and `credentialSecretValues` from the Core package.
 This lets declared effects report provider failures without importing private
-provider runners, storage or engine implementations. Weather's effect, read step
-and workflow contract advance to version 2; its public workflow identity remains
-`weather-advisor@1` and its result schema is unchanged.
+provider runners, storage or engine implementations.
+See the [Weather Advisor effect](../cli/scaffold/workflows/weather-advisor/src/weather-effect.ts) for an example.
 
 ## Inspect or share a Local diagnostic
 

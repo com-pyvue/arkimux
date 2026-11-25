@@ -98,7 +98,7 @@ New results use payload version `2`; the result reader still accepts old
 version `1` results, which remain available as original JSON.
 
 Invalid weather stops before either agent; invalid recommendation stops before
-critique. Three named steps preserve completed outputs for recovery.
+critique. Completed steps retain their outputs for recovery.
 
 ## Debug and stop
 

@@ -1,53 +1,33 @@
-# Agent Execution local portal
+# ArkiMux Local
 
-This restricted package runs the local filesystem API and focused workflow
-development portal from one Node.js process and one HTTP origin. Its default UI
-profile exposes Runs, immutable run configurations, and locally registered
-workflows; unrelated platform administration is not mounted.
+First configure the project’s `.env` as described in its README. From the
+project root (the directory containing `.arkimux/project.json`), start Local:
 
-The directory containing `.arkimux/project.json` is one ArkiMux Project and may
-register several workflows. Its raw Local state is isolated beneath
-`.arkimux/local/`; a surrounding parent directory has no ArkiMux meaning.
-
-If a repository still has any legacy `.agent-execution-*` state roots, migrate
-them explicitly before bootstrap or serve:
-
-```bash
-agent-execution-local migrate --repository-root /path/to/workflow-repository
+```sh
+npm run dev
 ```
 
-The verified file-backed state then lives under `.arkimux/local/` in the
-ArkiMux Project. The command retains a recoverable backup under
+Open the Connections URL printed by the command. The launcher sets up the
+workflow developer role automatically; you do not need to create a platform
+administrator. A project can register several workflows. Its Run data and
+configuration stay under `.arkimux/local/`. Use `npm run dev:stop` to stop
+only this project's server.
+
+## Migrate an older project
+
+If Local reports legacy storage or the project uses V1 combined authentication
+providers, stop its server and run the pinned CLI from the project root:
+
+```sh
+npm run dev:stop
+./node_modules/.bin/arkimux local migrate
+npm run dev
+```
+
+When Local migrates legacy state directories, it keeps a recoverable backup in
 `.arkimux/local/legacy-backup/`.
 
-Authenticate npm for the `@com-pyvue` scope, then bootstrap a local operator:
-
-```bash
-npm exec --package=@com-pyvue/agent-execution-local@next -- \
-  agent-execution-local bootstrap \
-  --repository-root /path/to/workflow-repository \
-  --subject-id local-operator \
-  --user-id local-operator \
-  --role-family agent-execution-platform-admin \
-  --role-preset local-platform-admin
-```
-
-Role presets own generic portal permissions while workflow repositories add
-only their workflow-specific permissions. Bootstrap keeps role definitions
-immutable: when a preset changes, the role family receives a new version and
-the local operator is moved from the superseded assignment automatically.
-
-Start the portal:
-
-```bash
-npm exec --package=@com-pyvue/agent-execution-local@next -- \
-  agent-execution-local serve \
-  --repository-root /path/to/workflow-repository \
-  --subject-id local-operator
-```
-
-Open <http://127.0.0.1:8787>. The server binds to loopback by default. Use
-`--hostname` and `--port` to override the listener explicitly.
+## Provider connections
 
 Workflow repositories should pin every supported CLI execution runtime in
 their own development dependencies. Provider preflight resolves an explicit
@@ -81,7 +61,7 @@ Credential definitions are stored under
 stored under `.arkimux/local/configuration/agent-auth-providers`. No read-secret
 route exists, and Agent Templates and workflow Run Configurations persist only
 the selected authentication-configuration ID. Keep `.arkimux/local/` ignored
-by Git. Run `npm run local:migrate` once when upgrading V1 combined providers.
+by Git.
 
 The Authentication Configuration table is a merged catalog. It includes
 platform-owned, read-only native sessions together with user-created API-key

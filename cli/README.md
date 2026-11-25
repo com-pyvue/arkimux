@@ -88,9 +88,9 @@ Declared effects retain their effect policy when imported from workflow code.
 Schema fields such as `z.object({ model: z.string() })` and data passed to the
 schema's `parse` are allowed. Unclassified fixed bindings, including shorthand
 and computed fields, are rejected rather than assumed portable.
-The public `guardProjectSourceEdits` compares caller-supplied SHA-256 inventories;
-the customization harness must capture the complete baseline and final inventory.
-A missing baseline reports `boundary-not-verified`, never success.
+If you use `guardProjectSourceEdits` in your own tooling, pass SHA-256 file
+hashes from before and after the edits. Without a baseline it returns
+`boundary-not-verified`. You do not need this helper to run `npm run validate`.
 
 `create-arkimux@0.1.0-alpha.2` delegates to this CLI's public
 `runArkiMuxCli` function. It does not contain another generator.

@@ -25,7 +25,7 @@ test("public guidance has working local links and no internal review notes", asy
 
 test("documented npm scripts exist in the project where the reader runs them", async () => {
   for (const [manifest, files] of [
-    ["cli/scaffold/package.json", ["cli/scaffold/README.md", "cli/README.md"]],
+    ["cli/scaffold/package.json", ["cli/scaffold/README.md", "cli/README.md", "local/README.md"]],
     ["package.json", ["README.md", "docs/agent-provider-compatibility.md", "test/provider-conformance/README.md"]],
   ]) {
     const { scripts } = JSON.parse(await read(manifest));

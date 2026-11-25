@@ -256,6 +256,14 @@ export const providerEvidence = [
     testName: "runs Pi with an Anthropic native session through an isolated agent directory",
     notes: "Uses a fake Pi executable and a configured Anthropic auth.json session to prove the generic native-session execution path and isolated copied agent directory.",
   },
+  {
+    evidenceId: "APC-E021",
+    level: "adapter",
+    providerIds: ["claude-code-cli", "pi-cli", "codex-cli"],
+    sourcePath: "test/provider-conformance/contract/local-v2-connections.contract.test.ts",
+    testName: "$id controlled Connection contract",
+    notes: "Controlled CLI processes exercise four Local connections. The Claude native-session cases validate native tool counts on success and failure; no live account is used.",
+  },
 ] as const satisfies readonly ProviderEvidenceDefinition[];
 
 export const providerGaps = [
@@ -300,13 +308,6 @@ export const providerGaps = [
     status: "prospect",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
     description: "Native tools differ by runner. Only Pi has a runner-owned extension point and current guarded repository implementation.",
-  },
-  {
-    trackingId: "APC-GAP-007",
-    title: "Native tool-call metrics fail shared validation",
-    status: "open",
-    affectedProviderIds: ["claude-code-cli", "kimi-code-cli"],
-    description: "The metrics type and runners use native-tool-call, while the shared validator currently accepts only shell-command and guarded-repository-operation.",
   },
   {
     trackingId: "APC-GAP-008",
@@ -721,8 +722,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": partial("Native command execution remains available, but apps and plugins are disabled and tools are not portable.", ["APC-E002"], ["APC-GAP-006", "APC-GAP-017"]),
       "pi-cli": notApplicable("All Pi built-in tools are deliberately disabled."),
-      "claude-code-cli": partial("Native tool use is controlled only through permission mode and is not portable.", ["APC-E007"], ["APC-GAP-006", "APC-GAP-007"]),
-      "kimi-code-cli": experimental("Native tool calls are observed but remain outside the public promise.", ["APC-E009"], ["APC-GAP-006", "APC-GAP-007"]),
+      "claude-code-cli": partial("Native tool use is controlled only through permission mode and is not portable.", ["APC-E007"], ["APC-GAP-006"]),
+      "kimi-code-cli": experimental("Native tool calls are observed but remain outside the public promise.", ["APC-E009"], ["APC-GAP-006"]),
     },
   },
   {
@@ -757,8 +758,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": supported("Produces the shared metric envelope.", ["APC-E001", "APC-E017", "APC-E018", "APC-E019"]),
       "pi-cli": supported("Produces the shared metric envelope.", ["APC-E004", "APC-E017", "APC-E018", "APC-E019"]),
-      "claude-code-cli": partial("Produces the envelope, but native-tool-call currently fails shared validation.", ["APC-E007", "APC-E017", "APC-E018", "APC-E019"], ["APC-GAP-007"]),
-      "kimi-code-cli": experimental("Produces the envelope, but native-tool-call currently fails shared validation.", ["APC-E009", "APC-E017", "APC-E018", "APC-E019"], ["APC-GAP-007"]),
+      "claude-code-cli": supported("The shared validator accepts Claude metrics, including native-tool-call.", ["APC-E007", "APC-E017", "APC-E018", "APC-E019", "APC-E021"]),
+      "kimi-code-cli": experimental("Produces the metrics envelope with the native-tool-call unit.", ["APC-E009", "APC-E017", "APC-E018", "APC-E019"]),
     },
   },
   {
@@ -805,8 +806,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": partial("Counts command_execution items and infers search or read operations from command text.", ["APC-E002"], ["APC-GAP-017"]),
       "pi-cli": supported("Uses exact guarded repository audit metrics when the extension is installed.", ["APC-E005", "APC-E006"]),
-      "claude-code-cli": partial("Counts native tool_use blocks, but shared validation rejects its unit.", ["APC-E007"], ["APC-GAP-007", "APC-GAP-017"]),
-      "kimi-code-cli": experimental("Counts native tool_calls, but shared validation rejects its unit.", ["APC-E009"], ["APC-GAP-007", "APC-GAP-017"]),
+      "claude-code-cli": partial("Counts native tool_use blocks, not individual repository operations. Offline tests validate the count on success and failure.", ["APC-E007", "APC-E021"], ["APC-GAP-017"]),
+      "kimi-code-cli": experimental("Counts native tool_calls rather than individual repository operations.", ["APC-E009"], ["APC-GAP-017"]),
     },
   },
   {
@@ -877,8 +878,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": supported("Uses CodexCliAgentRunError.", ["APC-E003", "APC-E019"]),
       "pi-cli": supported("Uses PiCliAgentRunError for exit and output-contract failures.", ["APC-E004", "APC-E019"]),
-      "claude-code-cli": partial("Uses ClaudeCodeCliAgentRunError, subject to the native-tool metric validation gap.", ["APC-E008", "APC-E019"], ["APC-GAP-007"]),
-      "kimi-code-cli": experimental("Uses KimiCodeCliAgentRunError outside the public promise.", ["APC-E009", "APC-E019"], ["APC-GAP-007"]),
+      "claude-code-cli": supported("Returns failure metrics, including observed native tool calls.", ["APC-E008", "APC-E019", "APC-E021"]),
+      "kimi-code-cli": experimental("Uses KimiCodeCliAgentRunError outside the public promise.", ["APC-E009", "APC-E019"]),
     },
   },
   {
@@ -1000,7 +1001,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-anthropic-session",
     supportStatus: "partial",
     journey: "Historical Local V2 revision 6; not a revision 7 requirement",
-    notes: "A native Pi Anthropic request was rejected for third-party extra-usage billing. Use the separate stored-key connection for Pi with Anthropic; a native session is not a substitute for that key.",
+    notes: "The offline test checks native session handling with a fake Pi CLI. For Pi with Anthropic in Local, use the stored-key connection; this test does not verify live account access.",
     evidenceIds: ["APC-E020"],
     trackingIds: ["APC-GAP-001", "APC-GAP-018"],
   },
@@ -1016,7 +1017,7 @@ export const providerExecutionCombinations = [
     journey: "Local V2",
     notes: "Native auth status and failure normalization exist, but there is no real-provider success test in the repository.",
     evidenceIds: ["APC-E008", "APC-E014"],
-    trackingIds: ["APC-GAP-001", "APC-GAP-007"],
+    trackingIds: ["APC-GAP-001"],
   },
   {
     combinationId: "claude-anthropic-api-key",
@@ -1028,9 +1029,9 @@ export const providerExecutionCombinations = [
     authenticationReference: "claude-code-anthropic-api-key",
     supportStatus: "partial",
     journey: "Local V2 optional; Managed V2 gate",
-    notes: "Key injection and stream parsing have fake-adapter evidence. Shared native-tool metrics validation and live evidence remain open.",
+    notes: "Offline adapter tests cover key injection, stream parsing, and tool counts. They do not verify a live API key.",
     evidenceIds: ["APC-E007", "APC-E013"],
-    trackingIds: ["APC-GAP-001", "APC-GAP-007"],
+    trackingIds: ["APC-GAP-001"],
   },
   {
     combinationId: "pi-command-credential",
