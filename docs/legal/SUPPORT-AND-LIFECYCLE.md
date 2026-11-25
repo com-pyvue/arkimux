@@ -12,9 +12,13 @@ diagnostics. Send privacy requests to <privacy@arkimux.ai>, not to the issue tra
 
 ## Versions and compatibility
 
-Local requires Node.js 24 or newer. Use the provider CLI and model configurations
-tested with your version. Other combinations may not work. You maintain your
-custom adapters and are responsible for testing your application and effects.
+Local requires Node.js 24 or newer. Use the provider CLI versions pinned in
+your generated project's `package.json`. The [provider compatibility guide](../agent-provider-compatibility.md)
+describes which adapter features have been tested. To check your selected
+connection and model, open **Connections** and choose **Test connection**.
+This may use provider quota; success does not verify access to other models.
+You maintain your custom adapters and are responsible for testing your
+application and effects.
 
 ## Updates and recovery
 

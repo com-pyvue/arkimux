@@ -65,7 +65,7 @@ receipt time. Usage events do not contain workflow source, inputs, prompts,
 outputs, Run IDs, absolute paths, provider error content, credentials, human
 identity or hosted ArkiMux account identity.
 AWS necessarily processes network addresses for transport and security; an IP
-address is not a field in the analytics event schema.
+address is not a field in the usage event schema.
 
 ## Delivery and retention
 

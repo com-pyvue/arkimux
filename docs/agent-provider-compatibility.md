@@ -25,7 +25,7 @@ offered as a Local Connection.
 
 These rows describe adapter behavior, not a list of options guaranteed to
 appear in the UI. A preset identifies a configuration template; a target ID
-does not identify an available preset. Test IDs refer to the catalog below.
+does not identify an available preset. Evidence IDs refer to the catalog below.
 
 <!-- BEGIN GENERATED:PROVIDER_EXECUTION_COMBINATION_MATRIX -->
 | Combination | Execution provider | Model provider | Authentication target | Wrapper support | Notes | Tests |

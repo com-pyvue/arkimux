@@ -33,7 +33,9 @@ their own development dependencies. Provider preflight resolves an explicit
 configured command first, then the repository's `node_modules/.bin`, then the
 server process `PATH`. The workflow page reports the selected configuration's
 runtime readiness before it allows a run to start, so a missing executable or
-CLI-owned authentication session does not reserve a failed run.
+CLI-owned authentication session does not reserve a failed run. If a runtime
+requires an exact CLI version, a version mismatch also stops Local from
+creating the Run.
 
 Workflow-local runtime composition should use the local authentication registry
 so API-key providers created in **Connections** become available without a server
@@ -79,11 +81,6 @@ Local keeps the latest test result for each connection. On failure, it may
 save and display the provider's redacted message, error code, and HTTP status.
 Review those details before sharing them. Local does not keep the test prompt
 or raw provider stream in the result.
-
-Local execution hosts resolve repository-pinned `codex`, `pi`, and
-`claude` commands from `node_modules/.bin` before falling back to PATH. When a
-provider runtime declares an exact required version, preflight rejects a
-mismatched binary before a run is created.
 
 Kimi is experimental and is not offered as a Local Connection. See the
 [provider compatibility guide](https://github.com/com-pyvue/arkimux/blob/main/docs/agent-provider-compatibility.md) for tested configurations.

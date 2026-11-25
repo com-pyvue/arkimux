@@ -10,7 +10,7 @@ This self-contained ArkiMux project includes two workflows:
 
 The workflows are yours to edit.
 
-Requires Node.js >=24.0.0 and npm 10.9.3. All dependencies are pinned.
+Requires Node.js 24 or newer. The project pins npm 10.9.3 and its dependencies.
 
 ## Configure and start
 

@@ -4,8 +4,8 @@ Local runs on your computer. ArkiMux does not host your Local workflows.
 
 | Area | ArkiMux Local provides | Developer or operator responsibility |
 | --- | --- | --- |
-| Workflow execution | The released workflow contracts, Local execution and typed-result APIs | Choose suitable workflows, validate business behavior and authorize effects |
-| Models and external services | The adapters and configurations actually tested for that release | Obtain provider access, follow provider terms, pay provider charges and approve model/tool use |
+| Workflow execution | Workflow contracts, Local execution and typed-result APIs for the version you use | Choose suitable workflows, validate business behavior and authorize effects |
+| Models and external services | Provider adapters with the capabilities and limits described in the [compatibility guide](../agent-provider-compatibility.md) for the version you use | Obtain provider access, follow provider terms, pay provider charges and approve model/tool use |
 | Credentials | Separate Local credential handling and native CLI integration | Protect the host, permissions and provider accounts; rotate exposed keys |
 | Inputs and outputs | Declared schema validation | Obtain data rights, assess privacy, review output correctness and decide whether an action is appropriate |
 | Effects | Declared effect execution and persisted operation state | Review external writes, retries, permissions, idempotency and uncertain outcomes; effects can incur cost or change real systems |
