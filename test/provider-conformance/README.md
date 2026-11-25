@@ -1,14 +1,12 @@
 # Provider conformance suite
 
-This directory's compatibility matrix, contract tests, embedded fake CLI fixtures
-and live harness are licensed under Apache-2.0, as specified by the existing
-Local V2 publication decision in `docs/agent-provider-compatibility.md`. See
-`LICENSE`. This scoped notice does not relicense imported runtime implementations
-or third-party packages, publish the suite, or prove public source availability.
+See the [provider compatibility guide](../../docs/agent-provider-compatibility.md)
+for adapter features, authentication modes and the limits of each kind of test.
+The suite is covered by the [suite licence](LICENSE); dependencies retain their own terms.
 
 Run offline tests from the repository root with `npm run test:provider-contract`.
-`contract/local-v2-connections.contract.test.ts` exercises the four Local V2
-Connection modes using real ArkiMux authentication adapters and synthetic CLIs:
+`contract/local-v2-connections.contract.test.ts` exercises four Local
+connection modes using real ArkiMux authentication adapters and synthetic CLIs:
 Codex native, Pi Codex native, Pi Anthropic stored key, and Claude native.
 Each gets completion, failure, cancellation and timeout checks; the Pi key path
 must not fall back to a native session. All results use one controlled schema.
@@ -16,12 +14,17 @@ Metrics pass the shared validator, including Claude native-tool counts on failur
 
 These checks do not call a provider, read user sessions, prove installed upstream
 CLI compatibility, or prove whole-workflow replay and Results API persistence.
-Native session values are synthetic. The separate live harness requires explicit
-quota approval and exact installed runtime/model observations. Missing or skipped
-live cases never become passing through the offline suite.
+Native session values are synthetic. A passing offline test is not a live result.
 
-For private-candidate evidence, retain this source, licence and referenced fixtures
-before running tests. Resolve public adapter imports to that candidate's installed
-Core bundle and prove those export identities. Keep helper-only source tests
-labelled separately. Record package/source hashes and pre/post read-back results;
-a passing source test alone is not package-bound conformance or gate acceptance.
+The [live suite](vitest.live.config.ts) makes billable calls with the configured
+credentials. If the quota is not yours, get the account owner's approval first.
+To run it, copy the [example case file](live/cases.example.json)
+outside the repository. Set the installed CLI path and exact version, the model
+you intend to call, and your evidence directory. Supply the credential through
+the environment variable named in the case file, not in the JSON. From the
+repository root, with dependencies installed, run:
+
+```sh
+ARKIMUX_PROVIDER_CONFORMANCE_CASES_FILE=/absolute/path/to/your-cases.json \
+  ./node_modules/.bin/vitest run --config test/provider-conformance/vitest.live.config.ts
+```

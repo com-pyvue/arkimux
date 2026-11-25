@@ -23,11 +23,10 @@ check the file's access control list. Native CLIs and telemetry use different
 credential paths; see [Privacy](docs/legal/PRIVACY-NOTICE.md).
 
 Normal workflows can execute real tools, effects and provider requests. Review
-them before invocation. The approved Docker mock debugger has a separate
+them before invocation. The Docker mock debugger has a separate
 isolation/mocking boundary; it does not make arbitrary ordinary workflow code
 safe. A typed result does not certify the safety or correctness of its contents.
 
-This source candidate has no announced supported stable-release matrix. The
-owner must set that matrix before release. This file does not claim an audit,
-certification, bug-bounty program or commitment to maintain every historical
-version. See the proposed [support policy](docs/legal/SUPPORT-AND-LIFECYCLE.md).
+There is no published list of supported stable versions or guarantee that every
+historical version receives fixes. See [community support](docs/legal/SUPPORT-AND-LIFECYCLE.md).
+These security guidelines do not constitute an audit or certification.

@@ -271,6 +271,19 @@ describe.each(providerIds)("%s deterministic execution-provider contract", (prov
   });
 });
 
+for (const providerId of ["pi-cli", "kimi-code-cli"] as const) {
+  describe(providerId, () => {
+    it("reports invalid-provider-response when the CLI exits without a final answer", async () => {
+      const context = await providerContext(providerId, "missing-answer");
+      await expect(context.runner.run(executionRequest(context.root, providerId, context.artifactPrefix)))
+        .rejects.toMatchObject({
+          externalDiagnostic: { provider: providerId, code: "invalid-provider-response" },
+          metrics: { providerId, status: "failed" },
+        });
+    });
+  });
+}
+
 it("runs Pi with an Anthropic native session through an isolated agent directory", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "arkimux-pi-anthropic-native-contract-"));
   temporaryDirectories.push(root);
@@ -343,7 +356,7 @@ it("runs Pi with an Anthropic native session through an isolated agent directory
   await expect(fs.access(output.agentDirectory)).rejects.toBeDefined();
 });
 
-async function providerContext(providerId: ProviderId, mode: "success" | "timeout"): Promise<{
+async function providerContext(providerId: ProviderId, mode: "success" | "timeout" | "missing-answer"): Promise<{
   root: string;
   command: string;
   artifactPrefix: string;
@@ -356,7 +369,7 @@ async function providerContext(providerId: ProviderId, mode: "success" | "timeou
     ? fixtures[providerId].script()
     : nodeScript([
         versionBranch(versionOutput(providerId)),
-        "setInterval(() => undefined, 1000)",
+        mode === "timeout" ? "setInterval(() => undefined, 1000)" : "console.log('{}')",
       ]);
   await fs.writeFile(command, script.join("\n"), { mode: 0o700 });
   await fs.mkdir(path.join(root, "codex-parent"), { recursive: true });

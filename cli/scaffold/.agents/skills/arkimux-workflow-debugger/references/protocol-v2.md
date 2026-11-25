@@ -10,12 +10,20 @@ Keep that process open. Standard input accepts one UTF-8 JSON request per line;
 standard output returns one JSON response or event per line. Diagnostics use
 standard error. The first valid request selects protocol V2 for the process.
 
-## Envelope
+## Create a session
 
-Every request has exactly these fields:
+Send `session.create` first. Replace the example workflow and configuration IDs, input,
+mocks, and expectations with your confirmed case. Set the four authorization flags
+only after the developer grants those permissions. Send each request on one line:
 
 ```json
-{"schemaVersion":2,"id":"unique-request-id","method":"session.inspect","params":{}}
+{"schemaVersion":2,"id":"create-example","method":"session.create","params":{"manifest":{"schemaVersion":2,"sessionId":"debug-example-1","workflowId":"example","configurationId":"example-local-v1","debug":{"stopOnEntry":true},"cases":[{"caseId":"reproduce","input":{"schemaVersion":1,"value":10},"mocks":{"read-source":{"kind":"result","value":{"value":10}}},"expectations":[{"id":"result","target":"result","pointer":"/result","operator":"equals","value":11}]}]},"authorization":{"executeProjectCode":true,"discloseWorkflowData":true,"discloseLiveState":true,"allowSimulatedEvaluation":true}}}
+```
+
+After creation succeeds, inspect the session:
+
+```json
+{"schemaVersion":2,"id":"inspect-example","method":"session.inspect","params":{}}
 ```
 
 Successful responses have `schemaVersion`, the same `id`, `ok: true`, and
@@ -23,46 +31,13 @@ Successful responses have `schemaVersion`, the same `id`, `ok: true`, and
 and `retry`. A `session.changed` event may arrive between responses. Match
 responses by `id`, not by line position.
 
-Request IDs must be unique while outstanding. Reuse a control ID only when
+The top-level request `id` is a nonempty string and must be unique among
+outstanding requests. Reuse a control ID only when
 retrying the identical control request. A changed request needs a new control
 ID. Each line and response is limited to 1 MiB.
 
-## Create manifest
-
-`session.create` must be the first request. Its parameters have this shape:
-
-```json
-{
-  "manifest": {
-    "schemaVersion": 2,
-    "sessionId": "debug-example-1",
-    "workflowId": "example",
-    "configurationId": "example-local-v1",
-    "debug": { "stopOnEntry": true },
-    "cases": [
-      {
-        "caseId": "reproduce",
-        "input": { "schemaVersion": 1, "value": 10 },
-        "mocks": {
-          "read-source": { "kind": "result", "value": { "value": 10 } }
-        },
-        "expectations": [
-          { "id": "result", "target": "result", "pointer": "/result", "operator": "equals", "value": 11 }
-        ]
-      }
-    ]
-  },
-  "authorization": {
-    "executeProjectCode": true,
-    "discloseWorkflowData": true,
-    "discloseLiveState": true,
-    "allowSimulatedEvaluation": true
-  }
-}
-```
-
-Use registered workflow and configuration IDs. Identifiers such as session,
-case, request, breakpoint, evaluation, and control IDs use lowercase letters,
+Use registered workflow and configuration IDs. Session, case, breakpoint,
+evaluation, and control IDs use lowercase letters,
 digits, and hyphens, begin with a letter or digit, and are at most 64 characters.
 
 A mock key is a stable declared operation ID. A fixture is either:
@@ -91,7 +66,6 @@ case against its supplied mocks.
 
 ## Methods
 
-The method headings below are checked against the canonical protocol schemas.
 All parameter objects reject unknown fields.
 
 ### `session.create`

@@ -197,7 +197,9 @@ describe("integrated Agent Execution web host", () => {
     }));
     render(<AgentExecutionWebApp apiBaseUrl="http://api.test" session={{ cacheKey: "privacy-offline" }} resultPlugins={[]} uiConfiguration={agentExecutionUiConfiguration("workflow-development")} />);
     expect(await screen.findByRole("heading", { name: "Local usage Privacy Notice" })).toBeTruthy();
-    expect(screen.getByText(/retention and deletion policy is not configured/)).toBeTruthy();
+    expect(screen.getByText(/Retention and deletion settings are unavailable/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "privacy@arkimux.ai" }).getAttribute("href")).toBe("mailto:privacy@arkimux.ai");
+    expect(screen.queryByText(/We do not keep an archive/)).toBeNull();
     expect(screen.queryByRole("heading", { name: "Help improve ArkiMux" })).toBeNull();
     expect((await screen.findByRole("alert")).textContent).toContain("offline");
   });

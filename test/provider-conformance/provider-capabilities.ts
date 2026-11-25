@@ -56,6 +56,7 @@ export interface ProviderEvidenceDefinition {
   providerIds: readonly ProviderId[];
   sourcePath: string;
   testName: string;
+  displayName?: string;
   notes: string;
 }
 
@@ -256,6 +257,23 @@ export const providerEvidence = [
     testName: "runs Pi with an Anthropic native session through an isolated agent directory",
     notes: "Uses a fake Pi executable and a configured Anthropic auth.json session to prove the generic native-session execution path and isolated copied agent directory.",
   },
+  {
+    evidenceId: "APC-E021",
+    level: "adapter",
+    providerIds: ["claude-code-cli", "pi-cli", "codex-cli"],
+    sourcePath: "test/provider-conformance/contract/local-v2-connections.contract.test.ts",
+    testName: "$id controlled Connection contract",
+    displayName: "Connection handling: Codex native, Pi Codex native, Pi Anthropic API key and Claude native",
+    notes: "Controlled CLI processes exercise completion, cancellation, timeout and provider failure for four Local connections, checking failure codes and process exit. The Claude native-session cases validate native tool counts on success and failure; no live account is used.",
+  },
+  {
+    evidenceId: "APC-E022",
+    level: "adapter",
+    providerIds: ["pi-cli", "kimi-code-cli"],
+    sourcePath: "test/provider-conformance/contract/agent-execution-provider.contract.test.ts",
+    testName: "reports invalid-provider-response when the CLI exits without a final answer",
+    notes: "Simulated Pi and Kimi CLIs exit successfully without a final answer. Both adapters report the same diagnostic code.",
+  },
 ] as const satisfies readonly ProviderEvidenceDefinition[];
 
 export const providerGaps = [
@@ -272,13 +290,6 @@ export const providerGaps = [
     status: "prospect",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
     description: "Runners append native output to local artifacts while executing, but return to callers only after the process closes.",
-  },
-  {
-    trackingId: "APC-GAP-003",
-    title: "No external cancellation contract",
-    status: "open",
-    affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
-    description: "The execution request has no AbortSignal or cancellation method. Only timeout-driven child termination exists.",
   },
   {
     trackingId: "APC-GAP-004",
@@ -300,13 +311,6 @@ export const providerGaps = [
     status: "prospect",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
     description: "Native tools differ by runner. Only Pi has a runner-owned extension point and current guarded repository implementation.",
-  },
-  {
-    trackingId: "APC-GAP-007",
-    title: "Native tool-call metrics fail shared validation",
-    status: "open",
-    affectedProviderIds: ["claude-code-cli", "kimi-code-cli"],
-    description: "The metrics type and runners use native-tool-call, while the shared validator currently accepts only shell-command and guarded-repository-operation.",
   },
   {
     trackingId: "APC-GAP-008",
@@ -331,10 +335,10 @@ export const providerGaps = [
   },
   {
     trackingId: "APC-GAP-011",
-    title: "No common execution error taxonomy",
+    title: "No detailed cross-provider taxonomy for provider-specific failures",
     status: "open",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
-    description: "Runners throw provider-specific Error subclasses with messages and optional metrics. Only selected Codex and Claude failures are normalized.",
+    description: "Execution codes distinguish cancellation, timeout and provider failure. The provider failure code does not classify every underlying cause (for example billing versus model access).",
   },
   {
     trackingId: "APC-GAP-012",
@@ -362,7 +366,7 @@ export const providerGaps = [
     title: "Command authentication is configuration-only",
     status: "prospect",
     affectedProviderIds: ["codex-cli", "pi-cli", "claude-code-cli", "kimi-code-cli"],
-    description: "The core authentication registry supports a credential command, but the current portal creates stored-credential bindings rather than command bindings.",
+    description: "The core authentication registry supports a credential command, but Connections creates stored-credential bindings rather than command bindings.",
   },
   {
     trackingId: "APC-GAP-016",
@@ -390,14 +394,14 @@ export const providerGaps = [
 const noHistory = unsupported("No message-history or role-separated input.", ["APC-GAP-013"]);
 const noMultimodal = unsupported("No image, audio, or file-part input.", ["APC-GAP-013"]);
 const noStreaming = unsupported("Only artifact capture is live; callers wait for completion.", ["APC-GAP-002"]);
-const noCancellation = unsupported("No caller cancellation signal or method.", ["APC-GAP-003"]);
+const localCancellation = supported("An AbortSignal stops the local CLI process.", ["APC-E021"]);
 const noRetry = unsupported("No automatic execution retry.", ["APC-GAP-004"]);
 const noIdempotency = unsupported("No provider request idempotency key.", ["APC-GAP-004"]);
 const noNativeSchema = unsupported("No provider-native JSON Schema response contract.", ["APC-GAP-005"]);
 const noPortableTools = unsupported("No shared tool declaration and result contract.", ["APC-GAP-006"]);
 const noProxy = unsupported("No provider proxy authentication or protocol path.", ["APC-GAP-010"]);
 const noRedaction = unsupported("Retained native output has no secret-redaction guarantee.", ["APC-GAP-012"]);
-const noErrorCodes = unsupported("No common machine-readable execution error code.", ["APC-GAP-011"]);
+const localFailureCodes = supported("Reports a shared failureCode for cancellation, timeout or provider failure.", ["APC-E021"]);
 const noHostScratch = unsupported("Runner chooses temporary paths instead of receiving host scratch.", ["APC-GAP-009"]);
 
 export const providerCapabilities = [
@@ -479,7 +483,7 @@ export const providerCapabilities = [
     title: "Model-provider routing",
     description: "Select a provider protocol independently from the execution CLI where supported.",
     providers: {
-      "codex-cli": partial("Accepts arbitrary Codex model_provider configuration, but candidate proof is OpenAI-focused.", ["APC-E001"], ["APC-GAP-001"]),
+      "codex-cli": partial("Accepts arbitrary Codex model_provider configuration, but the adapter tests cover OpenAI.", ["APC-E001"], ["APC-GAP-001"]),
       "pi-cli": supported("Requires an explicit provider and installed text-model catalog entry.", ["APC-E004"]),
       "claude-code-cli": notApplicable("The adapter is fixed to the native Anthropic protocol."),
       "kimi-code-cli": experimental("Supports kimi, anthropic, or openai provider types.", ["APC-E009"]),
@@ -516,7 +520,7 @@ export const providerCapabilities = [
     description: "Use a login session owned by the selected CLI.",
     providers: {
       "codex-cli": supported("Uses Codex login status and isolated child home links.", ["APC-E003"]),
-      "pi-cli": partial("The generic runner can use auth.json, but Pi Anthropic native Connection setup and live proof are missing.", ["APC-E020"], ["APC-GAP-001", "APC-GAP-018"]),
+      "pi-cli": partial("The Pi runner can read an Anthropic session from auth.json. Local does not offer this Connection, and the tests use a simulated CLI.", ["APC-E020"], ["APC-GAP-001", "APC-GAP-018"]),
       "claude-code-cli": supported("Uses claude auth status and provider-reported identity when available.", ["APC-E008"]),
       "kimi-code-cli": experimental("Uses the configured Kimi native-session home.", ["APC-E010"], ["APC-GAP-016"]),
     },
@@ -539,10 +543,10 @@ export const providerCapabilities = [
     title: "Credential command",
     description: "Run a fixed helper and inject its stdout as the selected credential.",
     providers: {
-      "codex-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "pi-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "claude-code-cli": partial("Supported by core configuration, not current portal creation.", ["APC-E012"], ["APC-GAP-015"]),
-      "kimi-code-cli": experimental("Implemented by the shared auth registry but outside the product promise.", ["APC-E012"], ["APC-GAP-015"]),
+      "codex-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "pi-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "claude-code-cli": partial("Supported in core configuration, but you cannot create this binding in Connections.", ["APC-E012"], ["APC-GAP-015"]),
+      "kimi-code-cli": experimental("The authentication registry accepts a credential command. Local does not offer this Kimi Connection.", ["APC-E012"], ["APC-GAP-015"]),
     },
   },
   {
@@ -566,7 +570,7 @@ export const providerCapabilities = [
       "codex-cli": noProxy,
       "pi-cli": noProxy,
       "claude-code-cli": noProxy,
-      "kimi-code-cli": unsupported("Kimi is not in the planned first proxy boundary.", ["APC-GAP-010"]),
+      "kimi-code-cli": unsupported("Kimi does not support provider proxy authentication.", ["APC-GAP-010"]),
     },
   },
   {
@@ -609,12 +613,12 @@ export const providerCapabilities = [
     capabilityId: "external-cancellation",
     category: "Execution",
     title: "External cancellation",
-    description: "Stop a running provider call from an API or workflow cancellation signal.",
+    description: "Cancel the local CLI process from the execution request.",
     providers: {
-      "codex-cli": noCancellation,
-      "pi-cli": noCancellation,
-      "claude-code-cli": noCancellation,
-      "kimi-code-cli": noCancellation,
+      "codex-cli": localCancellation,
+      "pi-cli": localCancellation,
+      "claude-code-cli": localCancellation,
+      "kimi-code-cli": experimental("The runner handles cancellation; not covered by the four Local connection tests.", [], ["APC-GAP-001"]),
     },
   },
   {
@@ -721,8 +725,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": partial("Native command execution remains available, but apps and plugins are disabled and tools are not portable.", ["APC-E002"], ["APC-GAP-006", "APC-GAP-017"]),
       "pi-cli": notApplicable("All Pi built-in tools are deliberately disabled."),
-      "claude-code-cli": partial("Native tool use is controlled only through permission mode and is not portable.", ["APC-E007"], ["APC-GAP-006", "APC-GAP-007"]),
-      "kimi-code-cli": experimental("Native tool calls are observed but remain outside the public promise.", ["APC-E009"], ["APC-GAP-006", "APC-GAP-007"]),
+      "claude-code-cli": partial("Native tool use is controlled only through permission mode and is not portable.", ["APC-E007"], ["APC-GAP-006"]),
+      "kimi-code-cli": experimental("The experimental Kimi runner records native tool calls.", ["APC-E009"], ["APC-GAP-006"]),
     },
   },
   {
@@ -757,8 +761,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": supported("Produces the shared metric envelope.", ["APC-E001", "APC-E017", "APC-E018", "APC-E019"]),
       "pi-cli": supported("Produces the shared metric envelope.", ["APC-E004", "APC-E017", "APC-E018", "APC-E019"]),
-      "claude-code-cli": partial("Produces the envelope, but native-tool-call currently fails shared validation.", ["APC-E007", "APC-E017", "APC-E018", "APC-E019"], ["APC-GAP-007"]),
-      "kimi-code-cli": experimental("Produces the envelope, but native-tool-call currently fails shared validation.", ["APC-E009", "APC-E017", "APC-E018", "APC-E019"], ["APC-GAP-007"]),
+      "claude-code-cli": supported("The shared validator accepts Claude metrics, including native-tool-call.", ["APC-E007", "APC-E017", "APC-E018", "APC-E019", "APC-E021"]),
+      "kimi-code-cli": experimental("Produces the metrics envelope with the native-tool-call unit.", ["APC-E009", "APC-E017", "APC-E018", "APC-E019"]),
     },
   },
   {
@@ -805,8 +809,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": partial("Counts command_execution items and infers search or read operations from command text.", ["APC-E002"], ["APC-GAP-017"]),
       "pi-cli": supported("Uses exact guarded repository audit metrics when the extension is installed.", ["APC-E005", "APC-E006"]),
-      "claude-code-cli": partial("Counts native tool_use blocks, but shared validation rejects its unit.", ["APC-E007"], ["APC-GAP-007", "APC-GAP-017"]),
-      "kimi-code-cli": experimental("Counts native tool_calls, but shared validation rejects its unit.", ["APC-E009"], ["APC-GAP-007", "APC-GAP-017"]),
+      "claude-code-cli": partial("Counts native tool_use blocks, not individual repository operations. Offline tests validate the count on success and failure.", ["APC-E007", "APC-E021"], ["APC-GAP-017"]),
+      "kimi-code-cli": experimental("Counts native tool_calls rather than individual repository operations.", ["APC-E009"], ["APC-GAP-017"]),
     },
   },
   {
@@ -877,8 +881,8 @@ export const providerCapabilities = [
     providers: {
       "codex-cli": supported("Uses CodexCliAgentRunError.", ["APC-E003", "APC-E019"]),
       "pi-cli": supported("Uses PiCliAgentRunError for exit and output-contract failures.", ["APC-E004", "APC-E019"]),
-      "claude-code-cli": partial("Uses ClaudeCodeCliAgentRunError, subject to the native-tool metric validation gap.", ["APC-E008", "APC-E019"], ["APC-GAP-007"]),
-      "kimi-code-cli": experimental("Uses KimiCodeCliAgentRunError outside the public promise.", ["APC-E009", "APC-E019"], ["APC-GAP-007"]),
+      "claude-code-cli": supported("Returns failure metrics, including observed native tool calls.", ["APC-E008", "APC-E019", "APC-E021"]),
+      "kimi-code-cli": experimental("The experimental Kimi runner reports failures with KimiCodeCliAgentRunError.", ["APC-E009", "APC-E019"]),
     },
   },
   {
@@ -887,10 +891,10 @@ export const providerCapabilities = [
     title: "Normalized provider errors",
     description: "Map provider-native failures to safe, actionable, provider-neutral categories.",
     providers: {
-      "codex-cli": partial("Preserves selected provider explanations and keeps credential redaction separate; a shared error taxonomy is not claimed.", ["APC-E003"], ["APC-GAP-011"]),
-      "pi-cli": unsupported("Preserves selected provider explanations; no shared provider-neutral error taxonomy.", ["APC-GAP-011"]),
-      "claude-code-cli": partial("Preserves the native-session failure explanation without guessing plan eligibility; no shared error taxonomy.", ["APC-E008"], ["APC-GAP-011"]),
-      "kimi-code-cli": unsupported("Preserves selected provider explanations; no shared provider-neutral error taxonomy.", ["APC-GAP-011"]),
+      "codex-cli": partial("Preserves selected provider explanations and keeps credential redaction separate; provider-specific causes are not fully classified.", ["APC-E003"], ["APC-GAP-011"]),
+      "pi-cli": partial("Reports invalid-provider-response when the CLI returns no final answer. Not all provider-specific failures have a common code.", ["APC-E022"], ["APC-GAP-011"]),
+      "claude-code-cli": partial("Preserves the native-session failure explanation without guessing plan eligibility; provider-specific causes are not fully classified.", ["APC-E008"], ["APC-GAP-011"]),
+      "kimi-code-cli": partial("Reports invalid-provider-response when the CLI returns no final answer. Not all provider-specific failures have a common code.", ["APC-E022"], ["APC-GAP-011"]),
     },
   },
   {
@@ -899,10 +903,10 @@ export const providerCapabilities = [
     title: "Common execution error codes",
     description: "Return one machine-readable error taxonomy across every runner.",
     providers: {
-      "codex-cli": noErrorCodes,
-      "pi-cli": noErrorCodes,
-      "claude-code-cli": noErrorCodes,
-      "kimi-code-cli": noErrorCodes,
+      "codex-cli": localFailureCodes,
+      "pi-cli": localFailureCodes,
+      "claude-code-cli": localFailureCodes,
+      "kimi-code-cli": experimental("Uses the shared error type; not covered by the four Local connection tests.", [], ["APC-GAP-001"]),
     },
   },
   {
@@ -944,7 +948,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "codex-openai-api-key",
     supportStatus: "supported",
     journey: "Local V2 optional; Managed V1; Managed V2 gate",
-    notes: "Managed V1 reference combination and one row of the Managed V2 portability gate. The key is resolved at invocation and injected as OPENAI_API_KEY.",
+    notes: "The key is resolved at invocation and injected as OPENAI_API_KEY.",
     evidenceIds: ["APC-E001", "APC-E013"],
     trackingIds: ["APC-GAP-001"],
   },
@@ -986,7 +990,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-anthropic-api-key",
     supportStatus: "partial",
     journey: "Local V2 revision 7 required; Managed V2 gate",
-    notes: "The configuration and catalog path exist, but current automated runner evidence does not call Anthropic through the real Pi CLI.",
+    notes: "Configuration and model lookup are tested. Runner tests use a simulated Pi CLI, not a live Anthropic account.",
     evidenceIds: ["APC-E004", "APC-E013"],
     trackingIds: ["APC-GAP-001"],
   },
@@ -1000,7 +1004,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-anthropic-session",
     supportStatus: "partial",
     journey: "Historical Local V2 revision 6; not a revision 7 requirement",
-    notes: "A native Pi Anthropic request was rejected for third-party extra-usage billing. Revision 7 requires the separate API-key path instead. Existing native records are preserved, not promoted to API-key evidence.",
+    notes: "The offline test checks native session handling with a fake Pi CLI. For Pi with Anthropic in Local, use the stored-key connection; this test does not verify live account access.",
     evidenceIds: ["APC-E020"],
     trackingIds: ["APC-GAP-001", "APC-GAP-018"],
   },
@@ -1016,7 +1020,7 @@ export const providerExecutionCombinations = [
     journey: "Local V2",
     notes: "Native auth status and failure normalization exist, but there is no real-provider success test in the repository.",
     evidenceIds: ["APC-E008", "APC-E014"],
-    trackingIds: ["APC-GAP-001", "APC-GAP-007"],
+    trackingIds: ["APC-GAP-001"],
   },
   {
     combinationId: "claude-anthropic-api-key",
@@ -1028,9 +1032,9 @@ export const providerExecutionCombinations = [
     authenticationReference: "claude-code-anthropic-api-key",
     supportStatus: "partial",
     journey: "Local V2 optional; Managed V2 gate",
-    notes: "Key injection and stream parsing have fake-adapter evidence. Shared native-tool metrics validation and live evidence remain open.",
+    notes: "Offline adapter tests cover key injection, stream parsing, and tool counts. They do not verify a live API key.",
     evidenceIds: ["APC-E007", "APC-E013"],
-    trackingIds: ["APC-GAP-001", "APC-GAP-007"],
+    trackingIds: ["APC-GAP-001"],
   },
   {
     combinationId: "pi-command-credential",
@@ -1042,7 +1046,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "user-defined",
     supportStatus: "partial",
     journey: "Prospect only",
-    notes: "The core registry can run a fixed helper, but the portal does not create this binding and no live provider combination is certified.",
+    notes: "The core registry can run a fixed helper, but you cannot create this binding in Connections and these tests do not verify it with a live provider.",
     evidenceIds: ["APC-E012"],
     trackingIds: ["APC-GAP-001", "APC-GAP-015"],
   },
@@ -1056,7 +1060,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "pi-kimi-platform-api-key",
     supportStatus: "experimental",
     journey: "Prospect only",
-    notes: "Implementation hooks and presets exist, but Kimi-related portability was removed from known journeys.",
+    notes: "Kimi is experimental and is not offered as a Local Connection.",
     evidenceIds: ["APC-E004", "APC-E013"],
     trackingIds: ["APC-GAP-001", "APC-GAP-008"],
   },
@@ -1070,7 +1074,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "kimi-code-native-session",
     supportStatus: "experimental",
     journey: "Prospect only",
-    notes: "Adapter groundwork exists, but it is excluded from the public compatibility promise.",
+    notes: "Kimi is experimental and is not offered as a Local Connection.",
     evidenceIds: ["APC-E009", "APC-E010"],
     trackingIds: ["APC-GAP-008", "APC-GAP-016"],
   },
@@ -1084,7 +1088,7 @@ export const providerExecutionCombinations = [
     authenticationReference: "kimi-code-platform-api-key",
     supportStatus: "experimental",
     journey: "Prospect only",
-    notes: "The model environment and key path exist only as experimental groundwork.",
+    notes: "Kimi is experimental and is not offered as a Local Connection.",
     evidenceIds: ["APC-E009", "APC-E013"],
     trackingIds: ["APC-GAP-008"],
   },
@@ -1102,7 +1106,7 @@ const providerLabels: Record<ProviderId, string> = {
   "codex-cli": "Codex CLI",
   "pi-cli": "Pi CLI",
   "claude-code-cli": "Claude Code CLI",
-  "kimi-code-cli": "Kimi Code CLI",
+  "kimi-code-cli": "Kimi Code CLI (experimental; not offered in Local)",
 };
 
 const authenticationReferenceLabels: Record<
@@ -1127,7 +1131,6 @@ function capabilityCell(value: ProviderCapabilityCell): string {
   return markdown([
     `**${statusLabels[value.status]}** — ${value.note}`,
     references("Evidence", value.evidenceIds),
-    references("Tracking", value.trackingIds),
   ].filter(Boolean).join(" "));
 }
 
@@ -1141,28 +1144,19 @@ export function renderProviderCapabilityMatrix(): string {
 }
 
 export function renderProviderExecutionCombinationMatrix(): string {
-  const rows = providerExecutionCombinations.map((combination) => `| \`${combination.combinationId}\` | ${combination.productStatus} | \`${combination.executionProviderId}\` | ${markdown(combination.modelProvider)} | ${combination.authenticationKind}; ${authenticationReferenceLabels[combination.authenticationReferenceKind]}: \`${combination.authenticationReference}\` | ${statusLabels[combination.supportStatus]} | ${markdown(combination.journey)} | ${markdown(combination.notes)} | ${markdown(references("Evidence", combination.evidenceIds) || "—")} | ${markdown(references("Tracking", combination.trackingIds) || "—")} |`);
+  const rows = providerExecutionCombinations.map((combination) => `| \`${combination.combinationId}\` | \`${combination.executionProviderId}\` | ${markdown(combination.modelProvider)} | ${combination.authenticationKind}; ${authenticationReferenceLabels[combination.authenticationReferenceKind]}: \`${combination.authenticationReference}\` | ${statusLabels[combination.supportStatus]} | ${markdown(combination.notes)} | ${markdown(references("Evidence", combination.evidenceIds) || "—")} |`);
   return [
-    "| Combination | Product status | Execution provider | Model provider | Authentication target | Wrapper support | Journey | Notes | Evidence | Tracking |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Combination | Execution provider | Model provider | Authentication target | Wrapper support | Notes | Tests |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n") + "\n";
 }
 
 export function renderProviderEvidenceTable(): string {
-  const rows = providerEvidence.map((evidence) => `| \`${evidence.evidenceId}\` | ${evidence.level} | ${evidence.providerIds.map((providerId) => `\`${providerId}\``).join(", ")} | \`${markdown(evidence.sourcePath)}\` | ${markdown(evidence.testName)} | ${markdown(evidence.notes)} |`);
+  const rows = providerEvidence.map((evidence) => `| \`${evidence.evidenceId}\` | ${evidence.level} | ${evidence.providerIds.map((providerId) => `\`${providerId}\``).join(", ")} | \`${markdown(evidence.sourcePath)}\` | ${markdown("displayName" in evidence ? evidence.displayName : evidence.testName)} | ${markdown(evidence.notes)} |`);
   return [
-    "| Evidence ID | Level | Providers | Test file | Test name | What it proves |",
+    "| Evidence ID | Level | Providers | Test file | Test coverage | What it proves |",
     "| --- | --- | --- | --- | --- | --- |",
-    ...rows,
-  ].join("\n") + "\n";
-}
-
-export function renderProviderGapTable(): string {
-  const rows = providerGaps.map((gap) => `| \`${gap.trackingId}\` | ${markdown(gap.title)} | ${gap.status} | ${gap.affectedProviderIds.map((providerId) => `\`${providerId}\``).join(", ")} | ${markdown(gap.description)} |`);
-  return [
-    "| Tracking ID | Gap | Status | Providers | Current meaning |",
-    "| --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n") + "\n";
 }

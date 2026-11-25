@@ -1,21 +1,21 @@
 # External and internal error diagnostics
 
-Providers already return useful explanations, but ArkiMux previously discarded
-some of them and exposed some unclassified internal exceptions instead.
+When a provider fails, Local redacts known credential values and common secret
+patterns from its error message. Other sensitive details may remain. Review
+the message before sharing it.
+When ArkiMux itself fails, Local shows a short message rather than exposing the original exception.
 
-## Rule
+## What you see
 
-- Preserve a provider's selected error message, code and HTTP status. Keep its
-  formatting, option lists, public links and request identifiers.
-- Remove actual credentials and terminal control sequences. A provider response
-  is not assumed to be secret-free. Do not remove ordinary explanations merely
-  because they mention a key, token, path, payload or model.
-- Select explicit error events, not unrelated assistant output or entire
-  request/response objects. Existing process and response-size guards still apply.
-- Unknown ArkiMux exceptions become a short, authored message. Do not publish
-  their stack, host paths, raw exception objects or arbitrary `Error.message`.
+- For a provider failure, Local shows the provider’s redacted explanation and,
+  when available, its error code and HTTP status. The explanation can include
+  suggested options, public links and request IDs, but not terminal control sequences.
+- The diagnostic comes from the reported error, not unrelated assistant output
+  or the entire request or response.
+- For an unexpected ArkiMux failure, the action shows a short framework message,
+  not the original exception or stack trace.
 - A shortened debugger response points to saved failure evidence containing the
-  complete safe diagnostic. Storage does not silently shorten provider messages.
+  complete redacted diagnostic. Storage does not silently shorten provider messages.
 
 ## Adapter and effect boundary
 
@@ -31,69 +31,26 @@ throw new ExternalProviderError("weather", providerMessage, {
 
 The public metadata is `{ origin: "external", provider, message, code?,
 httpStatus? }`. Runtime wrappers preserve this metadata; they do not infer the
-origin from the wording of an arbitrary exception. Credentials are removed at
-the adapter before the error crosses IPC or enters storage.
+origin from the wording of an arbitrary exception. Pass known credential values
+in `secretValues` so they are redacted along with recognized patterns before
+the error leaves the adapter or is stored.
 
 `public-workflow-imports@2` permits the diagnostic error/types,
 `getExternalErrorDiagnostic`, and `credentialSecretValues` from the Core package.
 This lets declared effects report provider failures without importing private
-provider runners, storage or engine implementations. Weather's effect, read step
-and workflow contract advance to version 2; its public workflow identity remains
-`weather-advisor@1` and its result schema is unchanged.
+provider runners, storage or engine implementations.
+See the [Weather Advisor effect](../cli/scaffold/workflows/weather-advisor/src/weather-effect.ts) for an example.
 
-## Audit coverage
+## Inspect or share a Local diagnostic
 
-| Audit item | Corrected behavior |
-| --- | --- |
-| 1 | Weather retains TLS causes, HTTP status and provider text/code. |
-| 2 | Connection diagnostics preserve formatting and survive API/store validation. |
-| 3 | Authentication/model/billing classification no longer replaces provider explanations. |
-| 4 | Failed status commands are distinguished from a definite logged-out response. |
-| 5 | Explicit terminal errors cannot become successful Connection checks, even with exit code zero. |
-| 6 | Provider diagnostics survive host/worker IPC, Run settlement and resume. |
-| 7 | Headless failure and step evidence retain the safe diagnostic. |
-| 8 | Unknown internal errors use authored messages in probes, Runs, the review bridge and AWS CLI handlers. |
-| 9 | Each runner removes its actual resolved credentials, including custom environment bindings. |
-| 10 | Repository-tool errors retain useful relative-path guidance without raw filesystem errors. |
-| 11 | ECS placement failures retain diagnostics and fail the queue item instead of acknowledging success. |
-| 12 | AWS adapters classify service exceptions before the API boundary. Existing authorization and expected not-found/conflict handling remain. |
-| 13 | DynamoDB export failures include FailureCode and FailureMessage. |
-| 14 | Cognito OAuth failures retain code, description and HTTP status. |
-| 15 | The npm failure record retains complete secret-scrubbed stdout/stderr; failure to start npm has a friendly explanation. |
+Open **Settings → Diagnostics**, select a framework failure, and choose **Inspect**.
+The original record stays on your computer; it can include a stack trace, paths,
+or other private details. Provider and workflow failures are not collected on
+this page. They are reported where the operation failed, such as Connections or a Run.
 
-## Verification
-
-Regression tests use fake providers, mocked AWS services and local worker/HTTP
-fixtures. No live provider request, AWS deployment or npm publication is needed.
-Tests cover long messages, credential echoes, unknown internal errors, terminal
-error events, stored Connection results, worker restart/resume and debugger
-evidence. A private candidate rebuild is required to put source changes into the
-CLI's bundled packages. Previously generated projects are not rewritten or
-silently upgraded.
-
-### Verification recorded on 2026-09-15
-
-- Core: 478 tests passed. The final native-status refinement also passed its
-  57 affected tests and an independent 106-test adapter review.
-- Application API/UI: 190 tests passed. AWS: 49 tests passed. Repository tools:
-  14 tests passed. Provider contracts: 130 passed, 66 explicitly skipped by the
-  existing capability matrix.
-- CLI/debugger: 464 passed, with one confirmed pre-existing failure excluded
-  from the final rerun. Candidate wrapper: 50 tests passed.
-- Roadmap: the full suite passed 1,056 tests with one stale assertion expecting
-  internal exception text. After correcting that assertion, all 48 affected
-  bridge/store tests passed.
-- Full project typecheck, private candidate build, candidate package integrity
-  and the latest packaged native-auth source check passed.
-- Review inventory: 99 OCR-selected files, 63 reviewed for this change and
-  36 skipped because they contain only earlier staged feature/acceptance work
-  (63.6% of the whole dirty-worktree inventory, 100% of the selected in-scope
-  files). Changed tests excluded by OCR's default test filter were reviewed too.
-
-The separate existing failure is
-`test/cli/headless-reader-integration.test.ts`, "kills the worker on guarded
-reader failure without exposing inspector diagnostics or resuming", line 322.
-Its stack-hook canary is written when the test expects no execution. It fails
-against both current source and the Git-index baseline, loaded in memory without
-reverting the worktree. The error-diagnostics changes did not cause it, and this
-audit does not claim that debugger safety check passes. It needs a separate fix.
+Copying or downloading a diagnostic does not send it anywhere. **Report an issue on GitHub**
+opens a public GitHub form without attaching the record. If you choose to share
+details, remove credentials, private paths, workflow content, and anything else
+you do not want to publish. For retention, deletion, and usage sharing, see the
+[Local privacy notice](legal/PRIVACY-NOTICE.md). For a suspected vulnerability,
+use [private security reporting](../SECURITY.md) instead.

@@ -12,7 +12,9 @@ Use public package imports and named durable steps. Keep runtime, Connection,
 model, engine, and storage choices outside portable workflow source.
 Keep provider keys out of source, prompts, fixtures, and results. Workflow
 variables belong in ignored .env; environment.json declares names only.
-Run npm run validate after edits. Restart the server after workflow or .env edits.
+Run npm run validate after edits outside mock debugging. For mock debugging,
+follow the skill's read-only source check unless host tests are separately authorized.
+Restart the server after workflow or .env edits.
 Renderer registry, imported renderer components and CSS update automatically;
 the Local API stays running. A broken renderer leaves the original JSON usable.
 Do not edit node_modules or ArkiMux internals to add a workflow.

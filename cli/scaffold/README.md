@@ -8,10 +8,9 @@ This self-contained ArkiMux project includes two workflows:
   supplied or deferred input at Step 1, Step 2, and one ordered-map item. It
   also demonstrates branch/join, loop, ordered map, and accumulator reduce.
 
-The workflows are yours to edit. No Platform checkout is needed.
+The workflows are yours to edit.
 
-Requires Node.js >=24.0.0 and npm 10.9.3. All dependencies are pinned.
-This is a private candidate, not a public release.
+Requires Node.js 24 or newer. The project pins npm 10.9.3 and its dependencies.
 
 ## Configure and start
 
@@ -26,10 +25,11 @@ npm run validate
 npm run dev
 ```
 
-The URL is required; there is no built-in default URL. Startup reads one snapshot
-of `.env` and passes only declared variables to the weather effect. The URL is
-not passed to agent processes, prompts, results, or run artifacts. Keep `.env`
-out of Git. Restart after changing it.
+`WEATHER_API_URL` is required and has no default. Local reads it at startup
+and saves its value with each Weather Advisor Run so the weather effect can use
+the same URL if the Run resumes. Do not put credentials in the URL, including
+its query string. Keep `.env` out of Git. After changing the URL, restart Local
+to use the new value for new Runs.
 
 Open the printed Connections URL. The default Run Configuration uses your
 existing Codex Native Session. Log in with `codex login` if needed; provider
@@ -46,13 +46,13 @@ npm run weather:result -- --run <execution-id>
 ```
 
 Weather Advisor is a declared graph: Read weather → Recommend clothing →
-Critique clothing → Assemble result. Open its **Workflow diagram** to inspect
+Critique clothing → Assemble result. Use the diagram under **Workflow** to inspect
 the same nodes and dependencies used by execution. The final node only assembles
 the result; there are still one weather request and two agent operations.
 `weather:run` supplies the city to the default graph entry. The Local UI also
 offers supplied or deferred input and starting at later steps with their complete
-required inputs. Prompts and the weather environment are pinned in the retained
-build by `workflows/weather-advisor/src/construction.ts`.
+required inputs. The workflow constructor reads the prompt files from the
+retained build; it does not receive the weather URL.
 
 The reader waits for completion and validates the typed Weather Advisor result.
 Use the Local UI Results tab for the project-owned React view or the original
@@ -99,13 +99,18 @@ New results use payload version `2`; the result reader still accepts old
 version `1` results, which remain available as original JSON.
 
 Invalid weather stops before either agent; invalid recommendation stops before
-critique. Three named steps preserve completed outputs for recovery.
+critique. Completed steps retain their outputs for recovery.
 
 ## Debug and stop
+
+If the background server is running, stop it before starting the IDE debugger:
 
 ```bash
 npm run dev:stop
 ```
+
+This stops only this project's background server. Run data stays under
+`.arkimux/local/`.
 
 Select **ArkiMux Local Debug** in your IDE and click **Debug**. Use Node 24
 or newer. VS Code/Cursor use `.vscode/launch.json`; WebStorm uses the saved `.run`
@@ -131,15 +136,8 @@ if a source file has changed, the debugger opens the retained source instead of
 binding it to the edited file. Run deadlines still apply while paused. Debugger
 settings are not passed to native agent processes.
 
-```bash
-npm run dev:stop
-```
-
 ArkiMux owns server startup, recovery and shutdown. The project contains workflow
 declarations and source, not server integration code.
-
-This stops only this project's server. Run data stays under ignored
-`.arkimux/local/`.
 
 ## Edit the project
 
@@ -152,4 +150,3 @@ This stops only this project's server. Run data stays under ignored
 
 Run `npm run validate` after edits. It typechecks, checks the project package and
 registry structure, and runs deterministic tests without provider calls.
-Broader public extension validation and release checks are tracked separately.

@@ -1,10 +1,11 @@
 # Local privacy notice
 
-Draft for owner review, updated 19 November 2026. This describes the Local
-candidate with authenticated withdrawal. Older installed versions may behave
-differently. This version requires a fresh choice before sending usage. The legal
-operator, public contact route and effective date must be confirmed before this
-becomes a final public notice.
+**Pyvue LLC operates ArkiMux** and decides why and how optional Local usage
+data is used. For privacy questions, requests or complaints, email
+<privacy@arkimux.ai>. You do not need an ArkiMux account to contact us.
+
+This is a preview notice, not a production notice in effect. In Local, open
+**Settings → Privacy** to see the recipient and notice version for your installation.
 
 ## Data used to run your workflows
 
@@ -19,10 +20,16 @@ vault. On POSIX systems Local requests mode `0600` (owner read/write) for new
 key files; migration preserves an existing file's permissions, which may be
 broader. On Windows, check the file's access control list. Native provider CLIs
 manage their own login data.
-Neither is the telemetry posting credential, which uses the OS credential store.
+Local stores the separate telemetry credential in the OS credential store.
 Protect the host and exclude credentials and local state from source control.
 
 ## Optional usage sharing
+
+We ask for your consent to measure where setup fails, whether the same
+installation later succeeds, and how long it takes to fetch a first result.
+That helps us tell whether changes to Local improve the experience. We
+link steps by installation because counting failures and successes separately
+would not tell us whether the installation that failed recovered.
 
 Sharing is off until you choose Yes or Share usage. No, Ask later, closing the
 prompt, or leaving it undecided do not authorize usage uploads and do not remove
@@ -37,44 +44,61 @@ identity with the dedicated AWS Cognito service in the background. Its posting
 credential stays in the OS credential store, not in the browser. The resulting
 ID is pseudonymous, not anonymous: it connects usage across your projects for
 that OS user account. It is not based on a MAC address or hardware fingerprint
-and is not joined to a Managed user account.
+and is not linked to a hosted ArkiMux account.
 
 The Local API/runtime sends these coded event groups to the ArkiMux Telemetry
 Service on AWS: consent granted, Local started, connection created or tested,
 configuration saved, Run started/completed/failed/cancelled, and successful
 result-payload fetch. A fetch is not evidence that a person viewed the result.
-The reviewed service configuration uses AWS region `eu-west-1`; this draft does
-not claim a production deployment or a wider data-residency guarantee.
-Event occurrence times can measure elapsed journey time across restarts and
-pauses, not hands-on work time.
+AWS hosts the telemetry service for Pyvue LLC. The preview service stores
+telemetry in Ireland (AWS region `eu-west-1`). This is the storage location,
+not a guarantee that all support access or other processing takes place there.
+We use event times to measure the time between recorded steps. This includes
+pauses and restarts; it does not tell us how long you were actively working.
 
-The allowed fields are schema version, random event/installation/consent-journey
-IDs, event kind, occurrence and send timestamps, ArkiMux version and, where
-needed, an opaque operation ID. The service adds receipt time. Usage events do
-not contain workflow source, inputs, prompts, outputs, Run IDs, absolute paths,
-provider error content, credentials, human identity or Managed identity.
+The allowed fields are schema version, random event and installation IDs,
+event kind, occurrence and send timestamps, ArkiMux version and, where needed,
+an opaque operation ID. Older events also carry an ID that groups events from
+the same period of consent. Events sent under `installation-retention-180d-v1`
+and `dev-sandbox-archive-v1` do not include that ID. The service adds
+receipt time. Usage events do not contain workflow source, inputs, prompts,
+outputs, Run IDs, absolute paths, provider error content, credentials, human
+identity or hosted ArkiMux account identity.
 AWS necessarily processes network addresses for transport and security; an IP
-address is not a field in the analytics event schema.
+address is not a field in the usage event schema.
 
 ## Delivery and retention
 
-For the **installation-retention-180d-v1** notice, sharing ends after 180
-consecutive inactive days or when you withdraw. Opening Local, retrying uploads
-or refreshing credentials does not extend consent. Connection creation or
-testing, configuration saves (including failed setup/test attempts), Run starts
-and successful result fetches count. Failed attempts send a code, not error
-text. This format does not send a journey ID. The old installation ID cannot
-resume sharing; returning requires a fresh Yes and a new, unlinked installation
-ID. This notice does not authorize keeping an archive of those events.
-The separate **dev-sandbox-archive-v1** notice is for an explicitly designated dev walkthrough, not production. A fresh Yes authorizes retaining coded usage after withdrawal or five inactive minutes. The original rows are deleted. The archive keeps the cohort month, ordered steps, operation pairings and relative times under one random key, without original IDs or exact timestamps. It has no automatic expiry and cannot be deleted by installation ID. Prior consent does not opt you in.
-The earlier configuration below does not describe that inactivity rule.
+Match the version in **Settings → Privacy** to the rule below. The service keeps
+usage events linked to your installation while sharing is active. When sharing
+ends, it deletes the original events. What remains depends on the notice you accepted.
+
+| Notice version | When sharing ends | What remains of your usage events |
+| --- | --- | --- |
+| `installation-retention-180d-v1` | When you stop sharing or reach the service’s inactivity cutoff (at most 180 consecutive days) | No archive. This is an inactivity limit, not a limit on the age of individual events while sharing is active. |
+| `dev-sandbox-archive-v1` (designated sandbox installations only) | When you stop sharing or after five inactive minutes | Only with a fresh Yes to this notice: the month, the order and relative timing of steps, and which steps belong to the same operation. A new random ID groups the steps from that installation. No original IDs or exact timestamps. |
+| `usage-with-withdrawal-archive-v1-disclosed` (earlier archive notice) | When you stop sharing; no inactivity cutoff | Only with a fresh Yes to this notice: the month you consented, the order and relative timing of steps, and whether the timing is valid. A new random ID groups the steps in each sequence; numbers within that sequence mark steps from the same operation. No original IDs, exact timestamps or build version. |
+| `usage-only-withdrawal-v1` | When you stop sharing; no inactivity cutoff | No archive. |
+
+For the two notices with an inactivity cutoff, creating or testing a connection,
+saving a configuration (including failed attempts), starting a Run, or fetching
+a result successfully counts as activity. Failed attempts send a code, not error
+text. Opening Local, retrying an upload, or refreshing credentials does not count.
+After expiry, sharing requires a fresh Yes and a new, unlinked installation ID.
+
+Only `dev-sandbox-archive-v1` and `usage-with-withdrawal-archive-v1-disclosed`
+keep the reduced history indefinitely. Once the link is removed,
+we cannot look up or delete an archived sequence by installation ID. Removing
+identifiers does not by itself make a distinctive sequence anonymous. Consent
+to one notice does not opt you into another.
+
+### Other records
 
 | Data | Current handling |
 | --- | --- |
 | Pending usage | Shared OS-user storage, bounded to 100 events per project and seven days; temporary failures retry with stable event IDs |
-| Uploaded usage | No automatic expiry under the current approved service configuration; used for product/journey comparison until deletion is requested |
 | Query-result files | Become eligible for expiry seven days after each file's creation, rounded to midnight UTC; AWS removal is asynchronous and can take longer |
-| Service/security logs | Current approved configuration uses seven-day retention |
+| Service/security logs | Seven days in the preview service |
 | Delivery and failed-delivery queues | Seven-day retention |
 | Privacy history | Retained locally, including known consent decisions, installation IDs and deletion receipts; not uploaded |
 | Original error diagnostics | Local only: at most 20 records, each at most 256 KiB, pruned after seven days when Local records or accesses diagnostics |
@@ -82,8 +106,7 @@ The earlier configuration below does not describe that inactivity rule.
 The installed Privacy page shows its recipient configuration and delivery state.
 An unconfigured recipient cannot receive telemetry. Delivery can fail or events
 can expire or be dropped at the bounds; consent is not a delivery guarantee.
-Retention values for a different approved recipient must be disclosed in its
-configured notice rather than inferred from this draft.
+For a different recipient, check the retention shown in Settings → Privacy.
 
 ## Stop sharing and delete uploaded usage
 
@@ -92,8 +115,8 @@ Before sharing, choose **Share usage** or **Do not share**. When already sharing
 clears unsent usage and requests authenticated withdrawal. Earlier clients label
 this action **Delete shared data**. After stopping, the Privacy page shows a
 separate deletion action only for earlier linked data not yet requested for
-withdrawal. An in-flight
-upload cannot be recalled. Local retries offline requests without renewed
+withdrawal. An in-flight upload cannot be recalled.
+Local retries offline requests without renewed
 consent. The service removes the installation's source data and catalog entries
 within seven days. An accepted request is not confirmation of removal. Local
 keeps the credential to follow up until the service confirms completion.
@@ -105,19 +128,36 @@ Minimal deletion records remain to reject old uploads; privacy history stays
 on this computer. Older versions that already discarded a credential cannot
 recover it from the installation ID alone.
 
-Only the dev-3 walkthrough with a fresh Yes to the withdrawal archive notice
-retains a reduced journey indefinitely after withdrawal: consent month, ordered
-event kinds, journey-local operation numbers and relative timing with a validity
-flag, under a new random journey key. Original IDs, exact dates/times and build
-version are removed. After conversion, the archive cannot be deleted by
-installation ID. Older consent and other environments do not qualify. Replacing
-identifiers with random journey keys and keeping relative timing would not, by
-itself, make a distinctive sequence anonymous.
-
 Existing query-result files are not purged by that action and expire on the
 file-age basis above. In-flight queries are not cancelled; downloaded reports
 cannot be recalled. Deletion does not remove your projects, Run files, local
 diagnostics, native provider accounts, or material you submitted to GitHub.
+
+## Privacy requests and complaints
+
+Email <privacy@arkimux.ai> and tell us what you want to know or change. This is
+a private contact, not a public GitHub issue. Google Workspace handles the email
+for Pyvue LLC; your sender address and the message you choose to send are
+visible to us so we can respond. Please do not send passwords, posting
+credentials, workflow content or diagnostic files.
+
+We keep privacy correspondence while we handle your request and any follow-up.
+Once it is no longer needed, we delete it, unless we need to keep it to meet a
+legal obligation or resolve a dispute.
+
+Depending on the law that applies to you, you may ask to access, correct,
+delete or receive a portable copy of your data, restrict its use or object to
+processing. You can withdraw consent in Settings → Privacy without giving a
+reason. This stops future sharing; it does not change whether earlier
+processing was lawful. If your concern is unresolved, or you prefer not to
+contact us first, you may complain directly to the data protection authority
+responsible for your location.
+
+We do not use your email address as the installation ID. If you need help with
+a specific withdrawal, tell us which notice you saw and whether Local showed a
+request receipt. An installation ID alone is not proof that you control it.
+Once an archive has removed the link to your installation, we cannot use your
+installation ID to find or erase those rows.
 
 ## Diagnostics and deliberate sharing
 
@@ -127,7 +167,7 @@ of that choice. They may contain private messages, paths or other sensitive
 details; do not assume that a diagnostic is safe to publish.
 
 Diagnostics lets you inspect, download or explicitly copy the displayed record.
-Copying is not submission. Report an issue opens a GitHub form with the framework
+Copying is not submission. **Report an issue on GitHub** opens a form with the framework
 version and blank prompts; no trace, diagnostic ID or file is attached. Review
 and redact any material before you submit it. GitHub issues are public and use
 GitHub's own policies. Deleting a local record or requesting telemetry deletion
@@ -136,11 +176,6 @@ does not delete a GitHub issue.
 ## Separate permissions
 
 Local usage consent is separate from the Apache licence, workflow permissions,
-provider accounts, payment and marketing consent. Detailed observed-session
-study records remain local and require an explicitly observed session; ordinary
-usage events are not proof of a complete measured session.
-
-This notice does not authorize website analytics or interest-form contact.
-Those surfaces need their own declared fields, recipients, purpose and retention
-before real submissions. A private preview must use isolated synthetic test
-records, not collect real leads under this Local choice.
+provider accounts and payment. Sharing Local usage does not give
+permission to track your website visits or contact you through an interest form
+or for marketing.
