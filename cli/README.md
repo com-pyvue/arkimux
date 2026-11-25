@@ -32,9 +32,11 @@ npm run dev:stop
 Project creation and Local UI
 startup do not require provider login. Open the printed **Connections** URL to
 set up and explicitly test a Connection; testing may use provider quota.
-Running the included Weather Advisor workflow requires an authenticated
-Codex session. The server checks it before reserving a run and again before
-agent execution. It does not copy the Codex credential into project storage.
+`npm run weather:run` uses the bundled Codex Run Configuration and requires
+an authenticated Codex session. In the Local UI, you can invoke Weather Advisor
+with a Run Configuration that uses another supported connection. The server
+checks the selected connection before reserving a run and again before agent
+execution. It does not copy native login credentials into project storage.
 
 `npm run validate` runs TypeScript, the offline and read-only
 `arkimux project validate` source check, and project tests. The CLI checks the

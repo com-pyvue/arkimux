@@ -32,7 +32,10 @@ mock code, real file paths, or real network targets in the manifest.
 
 ## Diagnose
 
-1. Run `npm run validate` before editing so existing failures are visible.
+1. From the project root, run `./node_modules/.bin/arkimux project validate`.
+   This checks source without executing it. Mock-debug permission does not
+   authorize host tests. Run the full `npm run validate` only if the developer
+   separately authorizes running project tests on the host.
 2. Start a persistent process from the project root:
 
    ```sh
@@ -56,7 +59,8 @@ mock code, real file paths, or real network targets in the manifest.
 8. Close the session. If code changes are authorized, edit public project files,
    increment affected definition versions when behavior changes, and start a
    fresh session. A retained session never picks up later source edits.
-9. Verify the fix without temporary mutation, then rerun `npm run validate`.
+9. Verify the fix in the fresh mock session without temporary mutation, then
+   repeat the read-only source check from step 1.
 
 Use only the handles and revisions returned by the current pause. A continue or
 step expires its pause, frame, scope, and object handles. Inspect again instead
@@ -84,7 +88,7 @@ Give the developer a short diagnosis containing:
 - observed breakpoint locations and relevant changing values;
 - root cause and the exact project-code change, if authorized;
 - simulated actual versus expected result before and after the fix;
-- `npm run validate` result;
+- read-only source check result;
 - session/container cleanup result; and
 - explicit limits: no real provider, integration, external-effect, billing, or
   business-correctness proof.

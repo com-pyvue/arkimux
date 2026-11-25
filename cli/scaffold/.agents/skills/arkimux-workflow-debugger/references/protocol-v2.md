@@ -65,7 +65,6 @@ case against its supplied mocks.
 
 ## Methods
 
-The method headings below are checked against the canonical protocol schemas.
 All parameter objects reject unknown fields.
 
 ### `session.create`

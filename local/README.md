@@ -54,7 +54,9 @@ const executionProviders = createAgentExecutionProviderRegistry(
 )
 ```
 
-The Authentication page writes local API keys through a dedicated REST API.
+To use an API key, open **Connections**. Under **Credentials**, choose
+**Add credential** and save the key. Then choose **Add connection** and select
+that credential.
 Credential definitions are stored under
 `.arkimux/local/credentials/definitions` and plaintext values under
 `.arkimux/local/credentials/values`. Reusable non-secret runtime bindings are
@@ -63,7 +65,7 @@ route exists, and Agent Templates and workflow Run Configurations persist only
 the selected authentication-configuration ID. Keep `.arkimux/local/` ignored
 by Git.
 
-The Authentication Configuration table is a merged catalog. It includes
+The **Connections** table includes
 platform-owned, read-only native sessions together with user-created API-key
 bindings. Native-session rows explain the required runtime login, such as
 `codex login` or Claude Code `/login`; they are not copied into the local
