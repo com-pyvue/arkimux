@@ -1,7 +1,7 @@
 # ArkiMux CLI
 
 The CLI creates a project with Weather Advisor and Graph Invocation. Each project
-pins its own CLI. Use Node.js 24 or newer. From the generated project, run:
+pins its own CLI. Use Node.js 24 or newer. From the directory where you created `my-agent-app`, run:
 
 ```bash
 cd my-agent-app
@@ -25,8 +25,8 @@ an insecure-connection warning if HTTP was used. This exception does not apply t
 If Local reports that your project needs migration, stop its server before migrating:
 
 ```bash
-arkimux local stop
-arkimux local migrate
+npm run dev:stop
+./node_modules/.bin/arkimux local migrate
 ```
 
 Project creation and Local UI
@@ -98,5 +98,5 @@ hashes from before and after the edits. Without a baseline it returns
 ## Debug a workflow
 
 - **Mock debugging with breakpoints:** From a generated project, start `./node_modules/.bin/arkimux debug stdio --project "$PWD"` and use protocol **2**. It runs workflow code in Docker with declared mocks instead of real effects or provider calls. You can set breakpoints, inspect variables, and step into, over, or out. See the [debugger guide](scaffold/.agents/skills/arkimux-workflow-debugger/SKILL.md) and [protocol reference](scaffold/.agents/skills/arkimux-workflow-debugger/references/protocol-v2.md) for requirements, permissions and commands.
-- **Running a diagnostic case:** The same command with protocol **1** runs a case and reads saved results; it does not provide interactive stepping or the Docker mock guarantee. Real calls can spend provider quota or cause external effects. See the [V1 session implementation](../local/src/headlessDebugger.ts) for the supported requests. Start a new process to switch protocols.
+- **Running a diagnostic case:** The same command with protocol **1** runs a case and reads saved results; it does not provide interactive stepping or the Docker mock guarantee. Real calls can spend provider quota or cause external effects. See the [V1 session implementation](https://github.com/com-pyvue/arkimux/blob/main/local/src/headlessDebugger.ts) for the supported requests. Start a new process to switch protocols.
 - **Attaching an IDE:** Stop the background server, then launch **ArkiMux Local Debug** in your IDE. Open the address the launcher prints and invoke a Run normally. This executes the real workflow, not a mock session. See the [IDE setup instructions](scaffold/README.md#debug-and-stop).

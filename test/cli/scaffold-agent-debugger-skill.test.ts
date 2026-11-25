@@ -28,18 +28,20 @@ describe("generated ArkiMux workflow debugger skill", () => {
     const canonical = Object.keys(headlessV2MethodParamsSchemas).sort();
 
     expect(documented).toEqual(canonical);
-    expect(reference).toContain('"executeProjectCode": true');
-    expect(reference).toContain('"allowSimulatedEvaluation": true');
     expect(reference).toMatch(/Match\s+responses by `id`, not by line position\./u);
     expect(reference).toContain("Always send `session.close`");
 
-    const createExample = reference.match(/`session\.create` must be the first request\.[\s\S]*?```json\n([\s\S]*?)\n```/u)?.[1];
-    expect(createExample).toBeDefined();
-    expect(() => parseHeadlessRequest({
-      schemaVersion: 2,
-      id: "documented-create",
-      method: "session.create",
-      params: JSON.parse(createExample!),
-    })).not.toThrow();
+    const examples = [...reference.matchAll(/^```json\n([\s\S]*?)\n```$/gmu)];
+    const [create, inspect] = examples.slice(0, 2).map(([, line]) => {
+      expect(line).not.toContain("\n"); // Each example is one complete stdio request.
+      return parseHeadlessRequest(JSON.parse(line));
+    });
+    expect(create).toMatchObject({
+      schemaVersion: 2, method: "session.create", params: { authorization: {
+        executeProjectCode: true, discloseWorkflowData: true, discloseLiveState: true, allowSimulatedEvaluation: true,
+      } },
+    });
+    expect(inspect).toMatchObject({ schemaVersion: 2, method: "session.inspect", params: {} });
+    expect(inspect.id).not.toBe(create.id);
   });
 });

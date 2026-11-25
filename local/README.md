@@ -84,7 +84,7 @@ provider runtime declares an exact required version, preflight rejects a
 mismatched binary before a run is created.
 
 Kimi is experimental and is not offered as a Local Connection. See the
-[provider compatibility guide](../docs/agent-provider-compatibility.md) for tested configurations.
+[provider compatibility guide](https://github.com/com-pyvue/arkimux/blob/main/docs/agent-provider-compatibility.md) for tested configurations.
 
 ## Workflow environment
 

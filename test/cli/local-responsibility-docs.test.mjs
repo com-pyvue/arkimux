@@ -23,6 +23,21 @@ test("public guidance has working local links and no internal review notes", asy
   }
 });
 
+test("package README links stay inside the package or point to public repository files", async () => {
+  const githubMain = "https://github.com/com-pyvue/arkimux/blob/main/";
+  for (const pkg of ["cli", "local"]) {
+    const packageUrl = new URL(pkg + "/", root);
+    for (const [, target] of (await read(pkg + "/README.md")).matchAll(/\]\(([^)]+)\)/g)) {
+      if (target.startsWith(githubMain)) {
+        await read(target.slice(githubMain.length).split("#")[0]);
+      } else if (!/^(?:https?:\/\/|mailto:|#)/.test(target)) {
+        const file = new URL(target.split("#")[0], packageUrl);
+        assert.ok(file.href.startsWith(packageUrl.href), `${pkg}/README.md: link leaves the installed package: ${target}`);
+      }
+    }
+  }
+});
+
 test("documented npm scripts exist in the project where the reader runs them", async () => {
   for (const [manifest, files] of [
     ["cli/scaffold/package.json", ["cli/scaffold/README.md", "cli/README.md", "local/README.md"]],
